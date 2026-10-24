@@ -75,12 +75,12 @@ rules is still a gap.
 
 | Rule | Test(s) | Status |
 |---|---|---|
-| S-1 | — | gap (M4) |
-| S-2 | — | gap (M4) |
-| S-3 | — | gap (M4) |
-| S-4 | — | gap (M4) |
-| S-5 | — | gap (M4) |
-| S-6 | — | gap (M4) |
+| S-1 | `TestSearch_CoversTitleDescriptionNoteTags_S1`, `TestSearch_ExcludesURLsLabelsAndFileNames_S1` | covered |
+| S-2 | `TestSearch_PrefixCaseInsensitiveAllWordsRequired_S2`, `TestSearchFlow_S2_S5` | covered |
+| S-3 | `TestSearch_TitleRanksAboveBody_S3` | covered |
+| S-4 | `TestSearch_MarkdownSymbolsDoNotAffectMatching_S4` | covered |
+| S-5 | `TestSearch_CombinesWithFilters_S5` | covered |
+| S-6 | `TestSearch_SavedChangeIsImmediatelySearchable_S6` | covered |
 
 ## Duplicates (`D-*`, `R-*`)
 
@@ -186,6 +186,7 @@ These tests protect the foundations the spec rules depend on.
 | FTS5 | `TestFTS5_AvailableAndUsable` | The driver supports FTS5, prefix matching, case folding and bm25 ranking (see ADR 0002). |
 | Attachments | `TestCreateItemWithAttachments_A1_A3_A4_A5_A6`, `TestDownloadAttachment_A7_A9`, `TestSave_*`, `TestItemService_Create_StoresFileWithSHA256_A3_A4` | Links and files are added through one form; files stream to disk with SHA-256, are stored by attachment id, and download under the original name with safe headers. |
 | Items and tags | `TestStore_CreateAndGetItem_I2`, `TestStore_ListItems_*`, `TestItemService_*`, `TestCreateItemFlow_*`, `TestEditItemFlow_I6`, `TestFavoriteToggle_F1` | Item create/edit/list, tag resolution, filtering, sorting and pagination work against a real SQLite database and over HTTP. |
+| Search safety | `TestSearch_SyntaxInjectionIsInert`, `TestBuildMatch` | No user input reaches FTS5 as syntax; every operator-like query is treated as literal text. |
 | Markdown safety | `TestMarkdown_*`, `TestItemDetail_RawHTMLNeverRendered_V2` | Notes render standard Markdown while raw HTML, event handlers and `javascript:` URLs are removed (V-1..V-4). |
 | Authentication | `TestSetupFlow_*`, `TestLoginFlow_*`, `TestLoginThrottle_U9`, `TestChangePassword_U7`, `TestLogout_U6` | First-run setup, sessions, cookie attributes, throttling, password change and logout work end to end against a real database. |
 | HTTP surface | `TestHealthz_ReturnsOK`, `TestHealthz_OnlyAllowsGET`, `TestUnknownRoute_NotFound`, `TestHealthz_RevealsNoData`, `TestSecurityHeaders_AppliedToEveryResponse` | `/healthz` is minimal and read-only, and security headers are on every response. |

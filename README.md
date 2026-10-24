@@ -23,11 +23,14 @@ Milestones **M0–M2** are complete. What works today:
   listing.
 - Attachments: link attachments and file uploads (streamed and hashed), with
   open, copy and download actions.
+- Search: FTS5 over title, description, note and tags, with prefix matching,
+  relevance ranking and combination with every filter.
 - Strict security headers, CSRF protection and a strict Content-Security-Policy
   on every response.
 
-Search arrives in M4 and the remaining features in later milestones. See the
-[milestone table](docs/README.md#milestones) for the full order.
+Trash, duplicates, tag management, export/import and hardening arrive in later
+milestones. See the [milestone table](docs/README.md#milestones) for the full
+order.
 
 ## Quick start
 

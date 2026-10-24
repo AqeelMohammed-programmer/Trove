@@ -699,3 +699,16 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- Search (M4) -------------------------------------------------------- */
+
+.search {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1 1 16rem;
+  max-width: 28rem;
+}
+
+.search input[type="search"] {
+  flex: 1;
+}

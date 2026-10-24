@@ -138,10 +138,11 @@ func (s *Server) handleList(w http.ResponseWriter, r *http.Request) {
 		data["Nav"] = "favorites"
 	}
 	data["Title"] = title
+	data["Search"] = filter.Search
 	data["Rows"] = rows
 	data["Total"] = result.Total
 	data["Empty"] = result.Total == 0
-	data["SortOptions"] = sortOptions(filter.Sort)
+	data["SortOptions"] = sortOptions(filter.Sort, filter.Search != "")
 	data["FavoritesOnly"] = filter.FavoritesOnly
 	data["HasLink"] = filter.HasLink
 	data["HasFile"] = filter.HasFile
@@ -410,11 +411,15 @@ func (s *Server) itemError(w http.ResponseWriter, r *http.Request, action string
 func parseListFilter(r *http.Request) domain.ListFilter {
 	q := r.URL.Query()
 	filter := domain.ListFilter{
+		Search:        strings.TrimSpace(q.Get("q")),
 		Tags:          cleanQueryValues(q["tag"]),
 		FavoritesOnly: q.Get("favorites") == "1",
 		HasLink:       q.Get("link") == "1",
 		HasFile:       q.Get("file") == "1",
 		Sort:          domain.SortOrder(q.Get("sort")),
+	}
+	if filter.Search != "" && filter.Sort == "" {
+		filter.Sort = domain.SortRelevance
 	}
 	if !filter.Sort.IsValid() {
 		filter.Sort = domain.SortNewest
@@ -426,12 +431,20 @@ func parseListFilter(r *http.Request) domain.ListFilter {
 }
 
 // sortOptions returns the dropdown entries, marking the active one (B-2).
-func sortOptions(current domain.SortOrder) []sortOption {
-	return []sortOption{
-		{Value: string(domain.SortNewest), Label: "Newest", Selected: current == domain.SortNewest},
-		{Value: string(domain.SortUpdated), Label: "Recently edited", Selected: current == domain.SortUpdated},
-		{Value: string(domain.SortTitle), Label: "Title", Selected: current == domain.SortTitle},
+// Relevance only appears while a search is active.
+func sortOptions(current domain.SortOrder, searching bool) []sortOption {
+	options := make([]sortOption, 0, 4)
+	if searching {
+		options = append(options, sortOption{
+			Value: string(domain.SortRelevance), Label: "Relevance", Selected: current == domain.SortRelevance,
+		})
 	}
+	options = append(options,
+		sortOption{Value: string(domain.SortNewest), Label: "Newest", Selected: current == domain.SortNewest},
+		sortOption{Value: string(domain.SortUpdated), Label: "Recently edited", Selected: current == domain.SortUpdated},
+		sortOption{Value: string(domain.SortTitle), Label: "Title", Selected: current == domain.SortTitle},
+	)
+	return options
 }
 
 // paginationFor computes the display range and neighbouring page links.
@@ -469,6 +482,9 @@ func paginationFor(filter domain.ListFilter, total int) pagination {
 // listURL rebuilds the current list URL with another page number.
 func listURL(filter domain.ListFilter, page int) string {
 	q := url.Values{}
+	if filter.Search != "" {
+		q.Set("q", filter.Search)
+	}
 	for _, tag := range filter.Tags {
 		q.Add("tag", tag)
 	}
@@ -503,7 +519,7 @@ func tagFilterURL(current url.Values, name string) string {
 		q.Add("tag", existing)
 	}
 	q.Add("tag", name)
-	for _, key := range []string{"favorites", "link", "file", "sort"} {
+	for _, key := range []string{"q", "favorites", "link", "file", "sort"} {
 		if value := current.Get(key); value != "" {
 			q.Set(key, value)
 		}
@@ -521,7 +537,7 @@ func selectedTagChips(current url.Values, tags []string) []tagChip {
 				q.Add("tag", existing)
 			}
 		}
-		for _, key := range []string{"favorites", "link", "file", "sort"} {
+		for _, key := range []string{"q", "favorites", "link", "file", "sort"} {
 			if value := current.Get(key); value != "" {
 				q.Set(key, value)
 			}

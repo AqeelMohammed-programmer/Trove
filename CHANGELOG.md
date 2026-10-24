@@ -63,6 +63,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A streamed multipart add/edit form and the `/attachments/{id}/download`
   endpoint.
 
+### Added
+
+- Search (M4): an FTS5 index over title, description, note and tags (`S-1`),
+  word-prefix matching with all words required and case-insensitive comparison
+  (`S-2`), relevance ranking with title matches first (`S-3`), a search box,
+  and combination with every existing filter (`S-5`). The index is written in
+  the same transaction as the item change (`S-6`), and user input is always
+  treated as literal text, never as FTS syntax.
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

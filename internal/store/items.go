@@ -36,6 +36,9 @@ func (s *Store) CreateItem(ctx context.Context, item domain.Item, tagNames []str
 	if err := insertAttachments(ctx, tx, item.ID, attachments); err != nil {
 		return domain.Item{}, err
 	}
+	if err := syncSearchIndex(ctx, tx, item.ID, item.Title, item.Description, item.Note, tagNameList(tags)); err != nil {
+		return domain.Item{}, err
+	}
 	if err := tx.Commit(); err != nil {
 		return domain.Item{}, fmt.Errorf("committing item: %w", err)
 	}
@@ -75,6 +78,9 @@ func (s *Store) UpdateItem(ctx context.Context, item domain.Item, tagNames []str
 		return domain.Item{}, err
 	}
 	if err := insertAttachments(ctx, tx, item.ID, newAttachments); err != nil {
+		return domain.Item{}, err
+	}
+	if err := syncSearchIndex(ctx, tx, item.ID, item.Title, item.Description, item.Note, tagNameList(tags)); err != nil {
 		return domain.Item{}, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -147,16 +153,29 @@ func (s *Store) ListItems(ctx context.Context, filter domain.ListFilter) (domain
 
 	where, args := buildItemWhere(filter)
 
+	match := buildMatch(filter.Search)
+	from := "items i"
+	order := orderBy(filter.Sort)
+	if match != "" {
+		from += ` JOIN items_fts ON items_fts.rowid = i.rowid`
+		where += ` AND items_fts MATCH ?`
+		args = append(args, match)
+		if filter.Sort == domain.SortRelevance {
+			// bm25: lower is better; title weighted highest (S-3).
+			order = `bm25(items_fts, 10.0, 1.0, 1.0, 2.0), i.created_at DESC, i.id DESC`
+		}
+	}
+
 	var total int
-	if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM items i WHERE `+where, args...).Scan(&total); err != nil {
+	if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM `+from+` WHERE `+where, args...).Scan(&total); err != nil {
 		return domain.ListResult{}, fmt.Errorf("counting items: %w", err)
 	}
 
 	// where holds only column names and ? placeholders; orderBy returns a
 	// constant. No user input is concatenated: every value is a bound arg.
 	columns := `SELECT i.id, i.title, i.description, i.note, i.favorite, ` +
-		`i.created_at, i.updated_at, i.trashed_at FROM items i WHERE ` // #nosec G202 -- assembly of trusted fragments
-	query := columns + where + ` ORDER BY ` + orderBy(filter.Sort) + ` LIMIT ? OFFSET ?` // #nosec G202 -- where/orderBy are trusted fragments
+		`i.created_at, i.updated_at, i.trashed_at FROM ` // #nosec G202 -- assembly of trusted fragments
+	query := columns + from + ` WHERE ` + where + ` ORDER BY ` + order + ` LIMIT ? OFFSET ?` // #nosec G202 -- trusted fragments
 	queryArgs := append(append([]any{}, args...), filter.PageSize, (filter.Page-1)*filter.PageSize)
 
 	rows, err := s.db.QueryContext(ctx, query, queryArgs...)
@@ -426,6 +445,14 @@ func scanAttachment(row rowScanner) (domain.Attachment, error) {
 		return domain.Attachment{}, err
 	}
 	return a, nil
+}
+
+func tagNameList(tags []domain.Tag) []string {
+	names := make([]string, 0, len(tags))
+	for _, tag := range tags {
+		names = append(names, tag.Name)
+	}
+	return names
 }
 
 func placeholders(n int) string {

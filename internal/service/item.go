@@ -213,6 +213,10 @@ func (s *ItemService) List(ctx context.Context, filter domain.ListFilter) (domai
 	if filter.PageSize > maxPageSize {
 		filter.PageSize = maxPageSize
 	}
+	if filter.Search != "" && filter.Sort == "" {
+		// B-2: an active search defaults to relevance.
+		filter.Sort = domain.SortRelevance
+	}
 	if !filter.Sort.IsValid() {
 		filter.Sort = domain.SortNewest
 	}

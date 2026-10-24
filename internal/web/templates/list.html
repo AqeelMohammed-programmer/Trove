@@ -5,6 +5,7 @@
 </div>
 
 <form method="get" action="/" class="filters" aria-label="Filters and sorting">
+  {{if .Search}}<input type="hidden" name="q" value="{{.Search}}">{{end}}
   {{range .SelectedTags}}<input type="hidden" name="tag" value="{{.Name}}">{{end}}
   <div class="filter-group">
     <label class="check"><input type="checkbox" name="favorites" value="1" {{if .FavoritesOnly}}checked{{end}}> Favorites only</label>

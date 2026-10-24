@@ -14,6 +14,11 @@
   <header class="topbar">
     <a class="brand" href="/">{{.App}}</a>
     {{if .Session}}
+    <form method="get" action="/" class="search" role="search">
+      <label for="q" class="visually-hidden">Search</label>
+      <input id="q" name="q" type="search" value="{{.Search}}" placeholder="Search items" autocomplete="off">
+      <button type="submit" class="secondary">Search</button>
+    </form>
     <a class="primary as-button" href="/items/new">Add item</a>
     {{end}}
   </header>

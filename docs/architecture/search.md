@@ -11,12 +11,13 @@ case folding and bm25 relevance ranking — everything `S-2` and `S-3` need. The
 driver proof is recorded in
 [ADR 0002](../decisions/0002-sqlite-and-fts5.md).
 
-## Index shape (M4)
+## Index shape
 
-An FTS5 table over the four searchable fields (`S-1`):
+An FTS5 table over the four searchable fields (`S-1`), created by migration
+`0003_search.sql`:
 
 ```sql
-CREATE VIRTUAL TABLE attachments_fts USING fts5(
+CREATE VIRTUAL TABLE items_fts USING fts5(
     title,
     description,
     note,
@@ -25,15 +26,19 @@ CREATE VIRTUAL TABLE attachments_fts USING fts5(
 );
 ```
 
+- The table holds its own copy of the text and shares the `items` rowid, so a
+  row is refreshed or removed by rowid.
 - Link URLs, attachment labels and file names are **not** indexed (`S-1`).
-- Markdown is stripped before indexing the note so formatting symbols do not
-  affect matching (`S-4`).
+- The raw note text is indexed; the tokenizer discards Markdown punctuation, so
+  formatting symbols do not affect matching (`S-4`). No separate Markdown pass
+  is needed.
 - The index is updated in the same transaction as the item change, so a saved
   change is searchable immediately (`S-6`).
 
 Keeping the index in sync means every write path (create, edit, trash,
-restore, permanent delete, import, tag rename/merge/delete) updates it. The
-service layer owns that; handlers never touch SQL.
+restore, permanent delete, import, tag rename/merge/delete) updates it.
+`syncSearchIndex` is called inside the create and update transactions; the
+remaining write paths add their own calls with their milestones.
 
 ## Building a query
 
@@ -63,7 +68,7 @@ Results are ordered by `bm25` with per-column weights that put title matches
 first (`S-3`):
 
 ```sql
-ORDER BY bm25(attachments_fts, 10.0, 3.0, 1.0, 5.0)
+ORDER BY bm25(items_fts, 10.0, 1.0, 1.0, 2.0), i.created_at DESC, i.id DESC
 ```
 
 The weights are a starting point and may be tuned with the M9 performance
@@ -72,16 +77,16 @@ relevance.
 
 ## Combining with filters
 
-The FTS match is a subquery joined to `items`, so the same query applies the
-tag filters, favorites filter, attachment-kind filters and trash exclusion
-(`B-3`, `B-6`, `S-5`). All filters combine with AND.
+The FTS table is joined to `items` on rowid, so the same query applies the tag
+filters, favorites filter, attachment-kind filters and trash exclusion (`B-3`,
+`B-6`, `S-5`). All filters combine with AND. When a search is active the default
+sort is relevance (`B-2`); choosing another sort replaces it.
 
-## Current state (M0)
+## Current state (M4)
 
-Only the driver proof exists: `TestFTS5_AvailableAndUsable` in
-`internal/store/fts5_test.go` proves that FTS5 can be created, that prefix and
-case-insensitive matching work, and that bm25 ranks a title match above a note
-match. There is no index, no query builder and no search endpoint yet.
+The `items_fts` table, the query builder (`buildMatch`) and search in the item
+list are implemented and covered by tests. The driver proof remains
+`TestFTS5_AvailableAndUsable` in `internal/store/fts5_test.go`.
 
 ## Related pages
 

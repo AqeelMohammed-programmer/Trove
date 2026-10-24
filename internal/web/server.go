@@ -248,7 +248,7 @@ func sessionFromContext(ctx context.Context) (auth.Session, bool) {
 
 // pageData seeds template data with the session and CSRF token when present.
 func pageData(r *http.Request) map[string]any {
-	data := map[string]any{"Session": false, "CSRF": "", "Title": "", "Nav": ""}
+	data := map[string]any{"Session": false, "CSRF": "", "Title": "", "Nav": "", "Search": ""}
 	if sess, ok := sessionFromContext(r.Context()); ok {
 		data["Session"] = true
 		data["CSRF"] = sess.CSRFToken

@@ -42,6 +42,12 @@ migration it records, so a failure never leaves a half-applied version.
 `attachments` links to `items(id)` with `ON DELETE CASCADE`; permanent deletion
 removes rows, while trashing only changes `state` (`X-9`).
 
+### `items_fts` (migration `0003_search`)
+
+A standalone FTS5 table over `title`, `description`, `note` and `tags`,
+sharing the `items` rowid. It is written in the same transaction as the item
+change (`S-6`). See the [search page](search.md).
+
 Design rules that apply to every table:
 
 - `STRICT` tables; timestamps stored as UTC ISO 8601 text.
@@ -81,6 +87,7 @@ for that from M0 onwards.
 |---|---|---|---|
 | 1 | `0001_auth.sql` | `settings`, `sessions`, `login_throttle` (authentication). | 2026-10-24 |
 | 2 | `0002_items.sql` | `items`, `tags`, `item_tags`, `attachments` plus list/filter indexes. | 2026-10-24 |
+| 3 | `0003_search.sql` | `items_fts` FTS5 index over title, description, note and tags. | 2026-10-24 |
 
 ## Related pages
 

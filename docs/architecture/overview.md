@@ -50,7 +50,7 @@ Dependency rules (`AGENTS.md` section 4.2):
 | `cmd/server` | Configuration, wiring, startup and graceful shutdown. | Implemented. |
 | `internal/app` | Product name and build information. | Implemented. |
 | `internal/config` | Flags and environment variables, validated at startup. | Implemented. |
-| `internal/store` | SQLite connection, pragmas, migration runner, item/tag SQL. | Implemented through M2. |
+| `internal/store` | SQLite connection, pragmas, migration runner, item/tag/attachment SQL and FTS building. | Implemented through M4. |
 | `internal/web` | HTTP routes, middleware, templates, security headers. | Auth screens and `/healthz`; item UI arrives in M2. |
 | `internal/domain` | Entities, validation and pure rules. | Implemented (items, tags, attachments, query types). |
 | `internal/service` | Use cases implementing spec rules. | Item and tag use cases implemented. |
