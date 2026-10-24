@@ -8,7 +8,10 @@
           aria-pressed="{{.Favorite}}"
           aria-label="{{if .Favorite}}Remove from favorites{{else}}Add to favorites{{end}}"
           title="{{if .Favorite}}Remove from favorites{{else}}Add to favorites{{end}}">
-    <span aria-hidden="true">{{if .Favorite}}★{{else}}☆{{end}}</span>
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"
+         {{if .Favorite}}fill="currentColor"{{else}}fill="none" stroke="currentColor" stroke-width="2"{{end}}>
+      <path d="m12 3 2.6 5.6 6.1.7-4.5 4.1 1.2 6L12 16.9 6.6 19.4l1.2-6L3.3 9.3l6.1-.7z"/>
+    </svg>
   </button>
 </form>
 {{end}}

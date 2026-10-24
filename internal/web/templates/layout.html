@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false}'>
   <title>{{.Title}} — {{.App}}</title>
+  <script src="/static/theme.js"></script>
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/htmx.min.js" defer></script>
   <script src="/static/app.js" defer></script>
@@ -19,11 +20,17 @@
       <input id="q" name="q" type="search" value="{{.Search}}" placeholder="Search items" autocomplete="off">
       <button type="submit" class="secondary">Search</button>
     </form>
-    <a class="primary as-button" href="/items/new">Add item</a>
     {{end}}
+    <span class="spacer"></span>
+    {{if .Session}}<a class="primary as-button" href="/items/new">Add item</a>{{end}}
+    <div class="theme-switch" role="group" aria-label="Colour theme">
+      <button type="button" data-theme-set="system" title="Follow the system setting">Auto</button>
+      <button type="button" data-theme-set="light" title="Light theme">Light</button>
+      <button type="button" data-theme-set="dark" title="Dark theme">Dark</button>
+    </div>
   </header>
 
-  <div class="shell">
+  <div class="shell{{if not .Session}} shell--bare{{end}}">
     {{if .Session}}
     <aside class="sidebar">
       <nav aria-label="Views">
