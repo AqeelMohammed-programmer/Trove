@@ -9,9 +9,11 @@ one password.
 The behaviour is defined by [`docs/spec.md`](docs/spec.md). The development
 guide is [`AGENTS.md`](AGENTS.md).
 
+**Version 1.0.0.**
+
 ## Status
 
-Milestones **M0–M2** are complete. What works today:
+All milestones (**M0–M9**) are complete. What works:
 
 - One Go binary that loads configuration, opens SQLite, applies migrations and
   serves both the UI and `GET /healthz`.

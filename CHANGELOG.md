@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-10-24
 
 ### Added
 
@@ -27,8 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ADRs 0001–0005: Go, SQLite/FTS5, server-rendered HTML with HTMX, password
   reset as a CLI subcommand, and the export/import archive.
 
-### Added
-
 - Authentication (M1): first-run password setup, login, logout, change
   password, Argon2id hashing with stored parameters, server-side sessions
   (hashed tokens, `HttpOnly`, `SameSite=Lax`, browser-session cookie), CSRF
@@ -37,8 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Authentication tests, including a route-enumeration test proving every
   non-public route rejects unauthenticated requests, and a real-SQLite
   integration suite for setup, login, throttling, logout and password change.
-
-### Added
 
 - Items and tags (M2): a single add/edit form (`I-1`, `I-6`), title defaulting
   to the first attachment (`I-2`), tag parsing, case-insensitive reuse and
@@ -51,8 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vendored HTMX 2.0.4 (MIT) for partial updates, configured for the strict
   Content-Security-Policy; every action still works without JavaScript.
 
-### Added
-
 - Attachments (M3): link attachments with `http`/`https` validation (`A-2`),
   and file uploads streamed to disk while a SHA-256 is computed, stored under
   the attachment id and never by file name (`A-3`, `A-4`, `A-6`, `A-8`).
@@ -63,16 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A streamed multipart add/edit form and the `/attachments/{id}/download`
   endpoint.
 
-### Added
-
 - Search (M4): an FTS5 index over title, description, note and tags (`S-1`),
   word-prefix matching with all words required and case-insensitive comparison
   (`S-2`), relevance ranking with title matches first (`S-3`), a search box,
   and combination with every existing filter (`S-5`). The index is written in
   the same transaction as the item change (`S-6`), and user input is always
   treated as literal text, never as FTS syntax.
-
-### Added
 
 - Trash (M5): deleting an item or removing one attachment moves it to the
   trash without confirmation (`I-7`, `A-9`, `X-1`, `X-2`, `X-13`). The trash
@@ -84,16 +74,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   attachments are independent (`X-10`), trashed items keep their tags (`X-11`),
   and orphaned content is cleaned up at startup (`X-12`).
 
-### Added
-
 - Duplicate handling (M6): the item detail view warns when an attachment matches
   another by exact URL or the same SHA-256, including matches inside the same
   item and trashed ones, and offers to open the matching item or restore a
   trashed one (`D-1`..`D-5`). A read-only **Duplicates** screen groups matching
   attachments by normalized URL (fragment and one trailing slash removed) and by
   SHA-256, marks trashed entries and links each to its item (`R-1`..`R-6`).
-
-### Added
 
 - Tag management (M7): a Tags screen lists tags shown under `T-6` with active
   item counts, alphabetical by default and sortable by count (`M-1`). Rename
@@ -104,8 +90,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   how many are affected (`M-4`). None of these change `updated_at` (`M-5`); the
   search index is refreshed so renamed or merged tags stay searchable.
 
-### Added
-
 - Export and import (M8): the whole repository exports as one ZIP archive
   holding `data.json` and a `files/` directory, with no password, hash or
   session data (`E-1`..`E-4`). Import is restore-only into an empty repository
@@ -115,8 +99,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`E-7`), preserves identifiers, timestamps, trash states, favorites, tags,
   labels and content (`E-8`), leaves the password alone (`E-9`), and a full
   export-then-import round trip reproduces the repository (`E-10`).
-
-### Added
 
 - Hardening (M9): a 100,000-item benchmark suite (`make bench`) measuring list,
   deep paging, tag filtering and single/multi-word search, all well under the
