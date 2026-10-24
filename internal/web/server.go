@@ -120,6 +120,7 @@ func (s *Server) routes() {
 	s.handle("GET", "/export", "/export", false, s.authenticated(s.handleExport))
 	s.handle("POST", "/import", "/import", false, s.authenticated(s.handleImport))
 	s.handle("GET", "/tags", "/tags", false, s.authenticated(s.handleTags))
+	s.handle("GET", "/tags/suggest", "/tags/suggest", false, s.authenticated(s.handleTagSuggest))
 	s.handle("POST", "/tags/{id}/rename", "/tags/example/rename", false, s.authenticated(s.handleRenameTag))
 	s.handle("POST", "/tags/{id}/merge", "/tags/example/merge", false, s.authenticated(s.handleMergeTag))
 	s.handle("POST", "/tags/{id}/delete", "/tags/example/delete", false, s.authenticated(s.handleDeleteTag))

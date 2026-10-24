@@ -91,6 +91,24 @@ form.
 - Semantic HTML, a skip link, and full keyboard operation.
 - Dark mode is applied from `prefers-color-scheme` by default.
 
+## Tag autocomplete
+
+The tag field on the item form holds comma-separated names. A native
+`<datalist>` matches its options against the whole input value, so it can only
+suggest the first tag and stops once a comma appears. `app.js` therefore
+enhances the input into a small combobox when JavaScript is available:
+
+- It suggests for the **token at the caret** only, and inserts the chosen name
+  without replacing the tags already typed.
+- Suggestions come from `GET /tags/suggest?q=…`, which returns active tags
+  whose name starts with the query (`T-2`, `T-6`). The matching rule lives in
+  `Store.SuggestTags`; the browser never reimplements it.
+- It follows the ARIA combobox pattern: `role="combobox"` on the input, a
+  `role="listbox"` popup, `aria-activedescendant` and arrow keys to move,
+  Enter to accept, and Escape to close.
+- Without JavaScript the field stays a plain comma-separated input and the
+  `<datalist>` remains as a fallback.
+
 ## Theme preference
 
 A small **Auto / Light / Dark** switch lives in the top bar. It is a UI

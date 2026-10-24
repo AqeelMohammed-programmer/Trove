@@ -22,6 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   It is a UI preference outside the specification; `theme.js` applies it before
   paint to avoid a flash, and both scripts stay external to respect the CSP.
 
+### Fixed
+
+- Tag autocomplete on the add/edit form now suggests the tag being typed, not
+  only the first one. The previous `<datalist>` matched the whole
+  comma-separated field, so suggestions stopped as soon as a comma appeared and
+  choosing one replaced every tag already entered. The field is now enhanced by
+  a small accessible combobox (`role="combobox"` with a `listbox` popup) that
+  asks `GET /tags/suggest` for active tags matching the current token (`T-2`),
+  and inserts the chosen name without touching the others. The datalist stays as
+  a no-JavaScript fallback.
+
 ## [1.0.0] - 2026-10-24
 
 ### Added

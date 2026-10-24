@@ -1,6 +1,12 @@
 package web
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+
+	"Trove/internal/domain"
+)
 
 // tagRow is one tag on the management screen (M-1).
 type tagRow struct {
@@ -79,6 +85,39 @@ func (s *Server) handleMergeTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/tags", http.StatusSeeOther)
+}
+
+// tagSuggestResponse is the JSON body of the tag autocomplete endpoint (T-2).
+type tagSuggestResponse struct {
+	Tags []string `json:"tags"`
+}
+
+// handleTagSuggest returns existing tag names that start with ?q, for the
+// autocomplete on the item form (T-2). Matching and the active-only rule live
+// in the service, so the browser never reimplements them. An empty query
+// returns no suggestions rather than the whole list.
+func (s *Server) handleTagSuggest(w http.ResponseWriter, r *http.Request) {
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	// A prefix longer than the longest allowed tag name cannot match one.
+	if runes := []rune(query); len(runes) > domain.MaxTagName {
+		query = string(runes[:domain.MaxTagName])
+	}
+
+	names := []string{}
+	if query != "" {
+		var err error
+		names, err = s.items.SuggestTags(r.Context(), query)
+		if err != nil {
+			s.serverError(w, r, "suggesting tags", err)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(tagSuggestResponse{Tags: names}); err != nil {
+		s.logger.WarnContext(r.Context(), "writing tag suggestions", "error", err)
+	}
 }
 
 // handleDeleteTag removes a tag from every item (M-4). The screen has already
