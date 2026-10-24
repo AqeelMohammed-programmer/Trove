@@ -1,0 +1,20 @@
+# Example deployment for a single personal instance on a trusted network.
+#
+# Copy this file, adjust the volume path, then:
+#   docker compose up -d --build
+#
+# Trove is intentionally not exposed to the public internet. If you put it
+# behind HTTPS, set SECURE_COOKIE=true and see the operations guide.
+
+services:
+  trove:
+    build: .
+    image: trove:1.0.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      # Enable only when served over HTTPS.
+      SECURE_COOKIE: "false"
+    volumes:
+      - ./trove-data:/data

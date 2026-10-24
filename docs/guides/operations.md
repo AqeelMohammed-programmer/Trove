@@ -1,8 +1,8 @@
 # Operations guide
 
 This page covers running a Trove instance: configuration, the data directory,
-backup and restore, upgrades, logs and the password reset. It describes what
-exists at M0 and marks features that arrive with later milestones.
+backup and restore, upgrades, logs, the password reset and the optional Docker
+image. Everything described here exists.
 
 ## Configuration
 
@@ -35,9 +35,9 @@ will not send the cookie back.
 
 ## Data directory
 
-The data directory holds the SQLite database and, from M3, copied files. It is
-created with mode `0700` if missing, and the database file with `0600`. See
-[storage](../architecture/storage.md) for the layout.
+The data directory holds the SQLite database and the copied files under
+`files/`. It is created with mode `0700` if missing, and the database file with
+`0600`. See [storage](../architecture/storage.md) for the layout.
 
 If you create the directory yourself, use `install -d -m 700` so the mode is
 correct before the server starts.
@@ -59,8 +59,10 @@ database:
 sqlite3 /var/lib/trove/repository.sqlite ".backup '/var/backups/trove.sqlite'"
 ```
 
-The M8 export produces a portable ZIP of the whole repository and is the
-recommended long-term archive once it exists.
+The application's own export (**Export and import** in the sidebar, or
+`GET /export`) produces a portable ZIP of the whole repository and is the
+recommended long-term archive. It is validated on the way back in, so it is a
+safer format to keep than a raw database copy.
 
 ## Restore
 
@@ -87,6 +89,31 @@ Builds inject version information. Check it with:
 
 The startup log line includes the build string, the listen address and the data
 directory (never secrets).
+
+## Docker
+
+A multi-stage `Dockerfile` builds a static binary and runs it on a distroless
+image as a non-root user. A `docker-compose.yml` example is included:
+
+```sh
+docker compose up -d --build
+```
+
+The image exposes port `8080`, stores its data in the `/data` volume, and takes
+the same `-listen`, `-data-dir` and `-secure-cookie` options as the binary. The
+example binds to `127.0.0.1:8080`.
+
+The `/data` directory inside the image is owned by the non-root user, so a
+fresh named or anonymous volume is writable. A **bind mount** takes the host
+directory's ownership instead; create it owned by the container user:
+
+```sh
+mkdir -p trove-data
+sudo chown 65532:65532 trove-data
+```
+
+Trove is meant for a trusted local network. If you place it behind a reverse
+proxy that terminates HTTPS, set `SECURE_COOKIE=true`.
 
 ## Logs
 

@@ -22,3 +22,5 @@ coverage.html
 .idea/
 .vscode/
 *.swp
+# Docker compose example volume
+trove-data/

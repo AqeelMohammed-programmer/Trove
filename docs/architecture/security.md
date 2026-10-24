@@ -56,14 +56,16 @@ switch for HTTPS deployments.
 | Link revalidation: only `http`/`https` links are accepted | `internal/domain/item.go` | `A-2` |
 | Vendored HTMX served from the app origin, configured with `allowEval:false` | `internal/web/static/htmx.min.js` | Keeps the strict CSP, no third-party origin (`I-8`). |
 
-### Planned
+### Added through M3–M9
 
-| Control | Milestone | Rules |
+| Control | Where | Notes |
 |---|---|---|
-| Streaming uploads with no size cap, plus `Content-Disposition: attachment` downloads with encoded names | M3 | `A-7`, `N-1` |
-| Link attachments rendered with `rel="noopener noreferrer"` and `target="_blank"` in the UI | M3 | `A-2` |
-| ZIP-slip protection and SHA-256 verification on import | M8 | `E-5`, `E-6`, `E-7` |
-| Orphaned blob cleanup that stays inside the data directory | M5/M9 | `X-12` |
+| Streaming uploads with no size cap; downloads with `Content-Disposition: attachment` and an encoded name | `internal/web`, `internal/web/item_form.go` | `A-7`, `N-1`. |
+| Link attachments rendered with `rel="noopener noreferrer"` and `target="_blank"` | `internal/web/templates` | `A-2`. |
+| Content-addressed storage guarded by an id whitelist, so a file name is never a path | `internal/blob` | Prevents path traversal (`A-8`). |
+| ZIP-slip protection and per-file SHA-256 verification before any import write | `internal/exchange` | `E-5`, `E-6`, `E-7`. |
+| Orphaned content cleanup that stays inside the content directory | `internal/service`, `internal/blob` | `X-12`. |
+| no-store on authenticated pages; `contentSecurityPolicy` with `allowEval:false` for HTMX | `internal/web` | Private data and the strict CSP. |
 
 ## Notes on specific decisions
 

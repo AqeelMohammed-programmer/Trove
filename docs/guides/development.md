@@ -36,7 +36,7 @@ If the spec is ambiguous or silent, stop and ask. Record the question in
 | `make test` | All tests with `-race`. |
 | `make build` | Build `bin/trove` with version information. |
 | `make check` | Everything above plus the documentation check. |
-| `make bench` | Performance benchmarks (meaningful from M2). |
+| `make bench` | 100,000-item performance benchmarks (`N-2`). |
 | `make tools` | Install pinned tools into `.tools/bin`. |
 | `make clean` | Remove build output and tools. |
 

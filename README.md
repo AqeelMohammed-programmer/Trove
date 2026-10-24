@@ -35,8 +35,17 @@ Milestones **M0–M2** are complete. What works today:
 - Strict security headers, CSRF protection and a strict Content-Security-Policy
   on every response.
 
-Hardening (performance check, Docker, accessibility and documentation review)
-arrives in the final milestone. See the [milestone table](docs/README.md#milestones).
+All milestones are complete. See the
+[milestone table](docs/README.md#milestones).
+
+## Docker
+
+```sh
+docker compose up -d --build
+```
+
+The image is a static binary on a distroless, non-root base and stores its data
+in a volume. See the [operations guide](docs/guides/operations.md#docker).
 
 ## Quick start
 

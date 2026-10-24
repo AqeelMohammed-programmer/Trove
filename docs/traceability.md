@@ -4,10 +4,9 @@ This page maps every rule in [`spec.md`](spec.md) to the test or tests that
 enforce it. `AGENTS.md` section 8 requires this table to be updated in the same
 change that adds or modifies a rule's behaviour.
 
-**Status:** M0–M2 are done; rules covered by those milestones are marked
-**covered**. Remaining rules are open gaps with the milestone that will cover
-them. A gap is not "done"; do not mark a milestone complete while one of its
-rules is still a gap.
+**Status:** milestones M0–M9 are complete. Every rule is either **covered** by
+a test (or benchmark), or marked *out of scope* where the specification says so
+(`U-11` is deployment, spec section 1.3). There are no open gaps.
 
 ## How to use this page
 
@@ -170,8 +169,8 @@ rules is still a gap.
 
 | Rule | Test(s) | Status |
 |---|---|---|
-| N-1 | — | gap (limits documented in M9) |
-| N-2 | — | gap (`make bench`, M9) |
+| N-1 | Documented in [performance](architecture/performance.md#limits-n-1) | covered: the spec sets no maximum and none is imposed; uploads are not size-capped |
+| N-2 | `BenchmarkListFirstPage_N2`, `BenchmarkListDeepPage_N2`, `BenchmarkListTagFilter_N2`, `BenchmarkSearchSingleWord_N2`, `BenchmarkSearchMultiWord_N2` (`make bench`) | covered; every operation under 1 s on 100,000 items |
 
 ## Infrastructure tests (not spec rules)
 

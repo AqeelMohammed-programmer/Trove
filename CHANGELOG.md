@@ -116,6 +116,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   labels and content (`E-8`), leaves the password alone (`E-9`), and a full
   export-then-import round trip reproduces the repository (`E-10`).
 
+### Added
+
+- Hardening (M9): a 100,000-item benchmark suite (`make bench`) measuring list,
+  deep paging, tag filtering and single/multi-word search, all well under the
+  one-second target (`N-2`), with the numbers and the documented limits (`N-1`)
+  recorded in the performance page.
+- A multi-stage `Dockerfile` (static binary on a distroless, non-root image) and
+  a `docker-compose.yml` example; both verified by building and running the
+  image.
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

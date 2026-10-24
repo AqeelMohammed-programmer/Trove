@@ -45,14 +45,47 @@ on. A regression that pushes any operation over one second is a bug.
 - File content never enters the database, so item queries stay small
   ([storage](storage.md)).
 
-## Current results (M0)
+## Results (M9)
 
-No measurements yet: there is no item schema and no benchmark. The toolchain
-supports benchmarks from M0 (`make bench` passes with "no benchmarks"), and the
-first real fixture arrives with M2.
+`make bench` seeds a temporary database with 100,000 items (mixed attachments,
+tags, favorites and some trashed) and measures reads. A representative run:
 
-Hardware used for future measurements will be recorded here together with the
-Go version and commit.
+| Benchmark | Rule | Time per query | Target |
+|---|---|---|---|
+| Default list, page 1 | `N-2`, `B-1` | ~12 ms | < 1 s |
+| Default list, page 1000 | `N-2`, `B-7` | ~40 ms | < 1 s |
+| Tag filter | `N-2`, `B-3` | ~91 ms | < 1 s |
+| Search, single prefix word | `N-2`, `S-2` | ~11 ms | < 1 s |
+| Search, two prefix words | `N-2`, `S-2` | ~149 ms | < 1 s |
+
+Every operation is comfortably under the one-second target. The tag filter and
+the multi-word search are the slowest because they combine a join with ranking;
+both remain well inside budget.
+
+Measured on 13th Gen Intel Core i7-13700HX, `go1.26.8`, commit `b2e17b4`.
+
+Run it yourself:
+
+```sh
+make bench
+```
+
+The numbers include nothing from seeding: the timer starts after the fixture is
+built.
+
+## Limits (N-1)
+
+The specification sets no maximum number of items or file size. The
+implementation adds only practical, documented bounds:
+
+- Ordinary form bodies are capped at 1 MiB; file uploads are **not** size-capped
+  and stream to disk.
+- Multipart import buffers at most 1 MiB in memory before spilling to a
+  temporary file; the archive is not size-capped.
+- One request may add at most 1000 files at once; this bounds a pathological
+  form, not file size.
+
+There is no limit on the number of items, tags or attachments.
 
 ## Related pages
 

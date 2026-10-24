@@ -68,7 +68,7 @@ rule it covers has a test and its pages are updated.
 | M6 | Duplicates | done |
 | M7 | Tag management | done |
 | M8 | Export and import | done |
-| M9 | Hardening | not started |
+| M9 | Hardening | done |
 
 ## Conventions
 
