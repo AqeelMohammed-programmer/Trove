@@ -178,13 +178,15 @@ Tests are how the spec is enforced. Write them with the code, not after.
 | `make build` | Build the single binary with version info injected. |
 | `make bench` | Run the 100,000-item performance check. |
 
-CI (for example GitHub Actions) runs `make check` on every push and pull request.
+`make check` is the single gate. Run it before every push. If a CI runner is
+available, it runs exactly this target; the project must not depend on any
+particular hosting or CI service.
 
 ---
 
 ## 9. Documentation (the wiki)
 
-Documentation lives in the repository under `docs/`, written in Markdown, so it is versioned with the code and can be published as a wiki (for example by pointing a GitHub wiki or a static site generator at the folder). **A change that alters behavior, structure, configuration, or operation is not done until the matching page is updated in the same change.**
+Documentation lives in the repository under `docs/`, written in Markdown, so it is versioned with the code and can be published with any static site generator that reads the folder. **A change that alters behavior, structure, configuration, or operation is not done until the matching page is updated in the same change.**
 
 ### 9.1 Structure
 
