@@ -29,6 +29,16 @@ type ItemStore interface {
 	SuggestTags(ctx context.Context, prefix string, limit int) ([]string, error)
 	AttachmentByID(ctx context.Context, id string) (domain.Attachment, error)
 	ItemTrashed(ctx context.Context, itemID string) (bool, error)
+	TrashItem(ctx context.Context, id string, now time.Time) error
+	RestoreItem(ctx context.Context, id string) error
+	TrashAttachment(ctx context.Context, id string, now time.Time) error
+	RestoreAttachment(ctx context.Context, id string) error
+	DeleteItemPermanent(ctx context.Context, id string) ([]string, error)
+	DeleteAttachmentPermanent(ctx context.Context, id string) ([]string, error)
+	EmptyTrash(ctx context.Context) ([]string, error)
+	TrashedItems(ctx context.Context) ([]domain.Item, error)
+	TrashedAttachments(ctx context.Context) ([]domain.TrashAttachment, error)
+	AllAttachmentIDs(ctx context.Context) ([]string, error)
 }
 
 // ItemService implements item, tag and attachment use cases.

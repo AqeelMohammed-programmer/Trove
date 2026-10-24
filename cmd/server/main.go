@@ -76,13 +76,22 @@ func run(args []string, getenv func(string) string) error {
 	if err != nil {
 		return err
 	}
+	itemService := service.NewItemService(st, blobs, time.Now)
+
+	// Best-effort cleanup of content files whose attachment row is gone. It
+	// never touches anything outside the content directory (X-12).
+	if removed, err := itemService.CleanupOrphans(ctx); err != nil {
+		logger.Warn("orphan cleanup failed", "error", err)
+	} else if removed > 0 {
+		logger.Info("removed orphaned content", "files", removed)
+	}
 
 	srv := &http.Server{
 		Addr: cfg.ListenAddr,
 		Handler: web.New(web.Options{
 			Logger:       logger,
 			Auth:         newAuthService(st),
-			Items:        service.NewItemService(st, blobs, time.Now),
+			Items:        itemService,
 			SecureCookie: cfg.SecureCookie,
 		}).Handler(),
 		// Uploads stream with no size cap (spec N-1), so there is deliberately

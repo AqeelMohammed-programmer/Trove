@@ -81,11 +81,14 @@ Online backups should use SQLite's backup API or `VACUUM INTO`, because copying
 a live WAL database can produce a torn snapshot. The
 [operations guide](../guides/operations.md) gives the commands.
 
-## Current state (M3)
+## Current state (M5)
 
 `repository.sqlite` and `files/` are both created at startup. File uploads are
 streamed, hashed and stored under `files/<id>`; downloads serve them with safe
-headers. The orphan cleanup routine is still to come (M5/M9).
+headers. Permanent deletion (of one attachment, one item or the whole trash)
+removes content after the database transaction commits, and `CleanupOrphans`
+runs at startup to remove content whose attachment row is gone. It never
+touches anything outside the content directory (`X-12`).
 
 ## Related pages
 

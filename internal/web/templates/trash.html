@@ -1,0 +1,90 @@
+{{define "content"}}
+<div class="page-head">
+  <h1>Trash</h1>
+  {{if not .Empty}}
+  <form method="post" action="/trash/empty" class="inline-form"
+        onsubmit="return confirm('Permanently delete everything in the trash? This cannot be undone.');">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <button type="submit" class="secondary danger">Empty trash</button>
+  </form>
+  {{end}}
+</div>
+
+{{if .Empty}}
+<div class="empty-state">
+  <p>The trash is empty.</p>
+</div>
+{{else}}
+
+{{if .Items}}
+<section aria-labelledby="trashed-items">
+  <h2 id="trashed-items">Items</h2>
+  <ul class="trash-list">
+    {{range .Items}}
+    <li class="trash-entry">
+      <div class="trash-head">
+        <div>
+          <h3><a href="/items/{{.Item.ID}}">{{.Item.Title}}</a></h3>
+          <p class="deleted">Deleted <time>{{.Deleted}}</time></p>
+        </div>
+        <div class="trash-actions">
+          <form method="post" action="/items/{{.Item.ID}}/restore" class="inline-form">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}">
+            <button type="submit" class="secondary">Restore</button>
+          </form>
+          <form method="post" action="/items/{{.Item.ID}}/delete" class="inline-form"
+                onsubmit="return confirm('Permanently delete this item? This cannot be undone.');">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}">
+            <button type="submit" class="secondary danger">Delete permanently</button>
+          </form>
+        </div>
+      </div>
+      {{if .Attachments}}
+      <ul class="attachment-list">
+        {{range .Attachments}}
+        <li>
+          <span class="kind">{{if eq .Kind "link"}}Link{{else}}File{{end}}</span>
+          <span class="attachment-name">{{if .Label}}{{.Label}}{{else if eq .Kind "link"}}{{.URL}}{{else}}{{.FileName}}{{end}}</span>
+          {{if .Trashed}}<span class="chip">trashed</span>{{end}}
+        </li>
+        {{end}}
+      </ul>
+      {{end}}
+    </li>
+    {{end}}
+  </ul>
+</section>
+{{end}}
+
+{{if .Attachments}}
+<section aria-labelledby="trashed-attachments">
+  <h2 id="trashed-attachments">Attachments</h2>
+  <ul class="trash-list">
+    {{range .Attachments}}
+    <li class="trash-entry">
+      <div class="trash-head">
+        <div>
+          <span class="kind">{{if eq .Attachment.Kind "link"}}Link{{else}}File{{end}}</span>
+          <span class="attachment-name">{{if .Attachment.Label}}{{.Attachment.Label}}{{else if eq .Attachment.Kind "link"}}{{.Attachment.URL}}{{else}}{{.Attachment.FileName}}{{end}}</span>
+          <p class="deleted">From <a href="/items/{{.ItemID}}">{{.ItemTitle}}</a> · deleted <time>{{.Attachment.Deleted}}</time></p>
+        </div>
+        <div class="trash-actions">
+          <form method="post" action="/attachments/{{.Attachment.ID}}/restore" class="inline-form">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}">
+            <button type="submit" class="secondary">Restore</button>
+          </form>
+          <form method="post" action="/attachments/{{.Attachment.ID}}/delete" class="inline-form"
+                onsubmit="return confirm('Permanently delete this attachment? This cannot be undone.');">
+            <input type="hidden" name="csrf" value="{{$.CSRF}}">
+            <button type="submit" class="secondary danger">Delete permanently</button>
+          </form>
+        </div>
+      </div>
+    </li>
+    {{end}}
+  </ul>
+</section>
+{{end}}
+
+{{end}}
+{{end}}

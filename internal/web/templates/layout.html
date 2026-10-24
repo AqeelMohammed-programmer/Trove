@@ -30,6 +30,7 @@
         <ul class="nav-list">
           <li><a href="/" {{if eq .Nav "all"}}aria-current="page"{{end}}>All items</a></li>
           <li><a href="/?favorites=1" {{if eq .Nav "favorites"}}aria-current="page"{{end}}>Favorites</a></li>
+          <li><a href="/trash" {{if eq .Nav "trash"}}aria-current="page"{{end}}>Trash</a></li>
         </ul>
       </nav>
 

@@ -64,7 +64,7 @@ rule it covers has a test and its pages are updated.
 | M2 | Items and tags | done |
 | M3 | Attachments | done |
 | M4 | Search | done |
-| M5 | Trash | not started |
+| M5 | Trash | done |
 | M6 | Duplicates | not started |
 | M7 | Tag management | not started |
 | M8 | Export and import | not started |

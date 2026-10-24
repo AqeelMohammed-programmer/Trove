@@ -32,6 +32,23 @@ func syncSearchIndex(ctx context.Context, tx *sql.Tx, itemID, title, description
 	return nil
 }
 
+// removeSearchIndex deletes the FTS row for an item. It must run before the
+// item row is deleted, because it looks the rowid up in items.
+func removeSearchIndex(ctx context.Context, tx *sql.Tx, itemID string) error {
+	var rowid int64
+	err := tx.QueryRowContext(ctx, `SELECT rowid FROM items WHERE id = ?`, itemID).Scan(&rowid)
+	if err == sql.ErrNoRows {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("looking up search row: %w", err)
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM items_fts WHERE rowid = ?`, rowid); err != nil {
+		return fmt.Errorf("removing search row: %w", err)
+	}
+	return nil
+}
+
 // buildMatch turns user input into an FTS5 MATCH expression. Each whitespace
 // token is quoted (with internal quotes doubled) and given a trailing `*` for
 // prefix matching (S-2). Raw input is never used as FTS syntax (AGENTS.md

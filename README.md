@@ -25,10 +25,12 @@ Milestones **M0–M2** are complete. What works today:
   open, copy and download actions.
 - Search: FTS5 over title, description, note and tags, with prefix matching,
   relevance ranking and combination with every filter.
+- Trash: soft delete, restore, permanent delete and empty trash, without ever
+  losing data by accident.
 - Strict security headers, CSRF protection and a strict Content-Security-Policy
   on every response.
 
-Trash, duplicates, tag management, export/import and hardening arrive in later
+Duplicates, tag management, export/import and hardening arrive in later
 milestones. See the [milestone table](docs/README.md#milestones) for the full
 order.
 

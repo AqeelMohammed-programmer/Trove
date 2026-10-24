@@ -50,6 +50,11 @@
         {{else}}
         <span class="attachment-name">{{if .Label}}{{.Label}}{{else}}{{.FileName}}{{end}}</span>
         {{end}}
+        <form method="post" action="/attachments/{{.ID}}/trash" class="inline-form remove">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <input type="hidden" name="next" value="{{$.Form.CancelURL}}">
+          <button type="submit" class="link-button">Remove</button>
+        </form>
       </li>
       {{end}}
     </ul>

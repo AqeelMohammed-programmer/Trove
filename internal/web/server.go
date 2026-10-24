@@ -116,6 +116,14 @@ func (s *Server) routes() {
 	s.handle("POST", "/items/{id}/favorite", "/items/example/favorite", false, s.authenticated(s.handleFavorite))
 	s.handle("GET", "/attachments/{id}/download", "/attachments/example/download", false, s.authenticated(s.handleDownload))
 	s.handle("GET", "/form/link-row", "/form/link-row", false, s.authenticated(s.handleLinkRow))
+	s.handle("GET", "/trash", "/trash", false, s.authenticated(s.handleTrash))
+	s.handle("POST", "/trash/empty", "/trash/empty", false, s.authenticated(s.handleEmptyTrash))
+	s.handle("POST", "/items/{id}/trash", "/items/example/trash", false, s.authenticated(s.handleTrashItem))
+	s.handle("POST", "/items/{id}/restore", "/items/example/restore", false, s.authenticated(s.handleRestoreItem))
+	s.handle("POST", "/items/{id}/delete", "/items/example/delete", false, s.authenticated(s.handleDeleteItem))
+	s.handle("POST", "/attachments/{id}/trash", "/attachments/example/trash", false, s.authenticated(s.handleTrashAttachment))
+	s.handle("POST", "/attachments/{id}/restore", "/attachments/example/restore", false, s.authenticated(s.handleRestoreAttachment))
+	s.handle("POST", "/attachments/{id}/delete", "/attachments/example/delete", false, s.authenticated(s.handleDeleteAttachment))
 	s.handle("POST", "/logout", "/logout", false, s.authenticated(s.handleLogout))
 	s.handle("GET", "/change-password", "/change-password", false, s.authenticated(s.handleChangePasswordPage))
 	s.handle("POST", "/change-password", "/change-password", false, s.authenticated(s.handleChangePassword))
@@ -197,7 +205,7 @@ func (s *Server) renderFragment(w http.ResponseWriter, name string, data any) {
 // partials. A failure is a programming error found at startup, not in a
 // request.
 func mustParseTemplates() map[string]*template.Template {
-	pages := []string{"list", "item", "item-form", "login", "setup", "change-password"}
+	pages := []string{"list", "item", "item-form", "trash", "login", "setup", "change-password"}
 	out := make(map[string]*template.Template, len(pages))
 	for _, page := range pages {
 		t, err := template.ParseFS(assets,

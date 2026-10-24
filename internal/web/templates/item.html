@@ -41,6 +41,13 @@
         <span class="attachment-size">{{.SizeBytes}} bytes</span>
         <a class="secondary as-button" href="/attachments/{{.ID}}/download">Download</a>
         {{end}}
+        {{if not $.Trashed}}
+        <form method="post" action="/attachments/{{.ID}}/trash" class="inline-form remove">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <input type="hidden" name="next" value="/items/{{$.Item.ID}}">
+          <button type="submit" class="link-button">Remove</button>
+        </form>
+        {{end}}
       </li>
       {{end}}
     </ul>
@@ -50,7 +57,23 @@
   </section>
 
   <p class="actions">
+    {{if .Trashed}}
+    <form method="post" action="/items/{{.Item.ID}}/restore" class="inline-form">
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      <button type="submit" class="primary">Restore</button>
+    </form>
+    <form method="post" action="/items/{{.Item.ID}}/delete" class="inline-form"
+          onsubmit="return confirm('Permanently delete this item? This cannot be undone.');">
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      <button type="submit" class="secondary danger">Delete permanently</button>
+    </form>
+    {{else}}
     <a class="primary as-button" href="/items/{{.Item.ID}}/edit">Edit item</a>
+    <form method="post" action="/items/{{.Item.ID}}/trash" class="inline-form">
+      <input type="hidden" name="csrf" value="{{.CSRF}}">
+      <button type="submit" class="secondary danger">Move to trash</button>
+    </form>
+    {{end}}
   </p>
 </article>
 {{end}}

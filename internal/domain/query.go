@@ -48,3 +48,19 @@ type TagCount struct {
 	Tag
 	Count int
 }
+
+// TrashAttachment is an individually trashed attachment shown with its owning
+// item in the trash view (X-3).
+type TrashAttachment struct {
+	Attachment
+	// ItemTitle is the title of the owning item.
+	ItemTitle string
+}
+
+// TrashList is everything the trash view shows (X-3).
+type TrashList struct {
+	// Items are trashed items, each with all of its attachments.
+	Items []Item
+	// Attachments are individually trashed attachments of active items.
+	Attachments []TrashAttachment
+}

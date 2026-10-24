@@ -72,6 +72,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same transaction as the item change (`S-6`), and user input is always
   treated as literal text, never as FTS syntax.
 
+### Added
+
+- Trash (M5): deleting an item or removing one attachment moves it to the
+  trash without confirmation (`I-7`, `A-9`, `X-1`, `X-2`, `X-13`). The trash
+  view lists trashed items with all their attachments and individually trashed
+  attachments with their owning item (`X-3`). Items and attachments restore
+  with the right attachment states (`X-4`, `X-5`). Permanent deletion of an
+  item, an attachment, or the whole trash requires confirmation and removes
+  stored file content only then (`X-6`, `X-7`, `X-8`, `X-9`). Identical-content
+  attachments are independent (`X-10`), trashed items keep their tags (`X-11`),
+  and orphaned content is cleaned up at startup (`X-12`).
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

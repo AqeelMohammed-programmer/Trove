@@ -392,11 +392,22 @@ func (s *Store) itemTags(ctx context.Context, itemID string) ([]domain.Tag, erro
 }
 
 func (s *Store) itemAttachments(ctx context.Context, itemID string) ([]domain.Attachment, error) {
+	return s.loadAttachments(ctx, itemID, false)
+}
+
+// loadAttachments loads an item's attachments ordered by time added. When
+// allStates is false only active attachments are returned; otherwise every
+// state, which the trash views need (X-3).
+func (s *Store) loadAttachments(ctx context.Context, itemID string, allStates bool) ([]domain.Attachment, error) {
+	condition := " AND state = 'active'"
+	if allStates {
+		condition = ""
+	}
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT id, item_id, kind, label, url, normalized_url, file_name, size_bytes,
 		        media_type, sha256, created_at, state, trashed_at
 		 FROM attachments
-		 WHERE item_id = ? AND state = 'active'
+		 WHERE item_id = ?`+condition+`
 		 ORDER BY created_at, id`, itemID)
 	if err != nil {
 		return nil, fmt.Errorf("loading attachments: %w", err)

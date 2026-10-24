@@ -102,6 +102,145 @@ func (f *fakeItemStore) ItemTrashed(_ context.Context, itemID string) (bool, err
 	return item.TrashedAt != nil, nil
 }
 
+func (f *fakeItemStore) TrashItem(_ context.Context, id string, now time.Time) error {
+	item, ok := f.items[id]
+	if !ok || item.TrashedAt != nil {
+		return domain.ErrNotFound
+	}
+	item.TrashedAt = &now
+	for i := range item.Attachments {
+		if item.Attachments[i].State == domain.StateActive {
+			item.Attachments[i].State = domain.StateTrashedWithItem
+			item.Attachments[i].TrashedAt = &now
+		}
+	}
+	f.items[id] = item
+	return nil
+}
+
+func (f *fakeItemStore) RestoreItem(_ context.Context, id string) error {
+	item, ok := f.items[id]
+	if !ok || item.TrashedAt == nil {
+		return domain.ErrNotFound
+	}
+	item.TrashedAt = nil
+	for i := range item.Attachments {
+		if item.Attachments[i].State == domain.StateTrashedWithItem {
+			item.Attachments[i].State = domain.StateActive
+			item.Attachments[i].TrashedAt = nil
+		}
+	}
+	f.items[id] = item
+	return nil
+}
+
+func (f *fakeItemStore) TrashAttachment(_ context.Context, id string, now time.Time) error {
+	for itemID, item := range f.items {
+		for i := range item.Attachments {
+			if item.Attachments[i].ID == id && item.Attachments[i].State == domain.StateActive {
+				item.Attachments[i].State = domain.StateTrashedIndividually
+				item.Attachments[i].TrashedAt = &now
+				f.items[itemID] = item
+				return nil
+			}
+		}
+	}
+	return domain.ErrNotFound
+}
+
+func (f *fakeItemStore) RestoreAttachment(_ context.Context, id string) error {
+	for itemID, item := range f.items {
+		for i := range item.Attachments {
+			if item.Attachments[i].ID == id && item.Attachments[i].State == domain.StateTrashedIndividually {
+				item.Attachments[i].State = domain.StateActive
+				item.Attachments[i].TrashedAt = nil
+				f.items[itemID] = item
+				return nil
+			}
+		}
+	}
+	return domain.ErrNotFound
+}
+
+func (f *fakeItemStore) DeleteItemPermanent(_ context.Context, id string) ([]string, error) {
+	item, ok := f.items[id]
+	if !ok || item.TrashedAt == nil {
+		return nil, domain.ErrNotFound
+	}
+	var blobs []string
+	for _, a := range item.Attachments {
+		if a.Kind == domain.KindFile {
+			blobs = append(blobs, a.ID)
+		}
+	}
+	delete(f.items, id)
+	return blobs, nil
+}
+
+func (f *fakeItemStore) DeleteAttachmentPermanent(_ context.Context, id string) ([]string, error) {
+	for itemID, item := range f.items {
+		for i := range item.Attachments {
+			if item.Attachments[i].ID == id && item.Attachments[i].State != domain.StateActive {
+				var blobs []string
+				if item.Attachments[i].Kind == domain.KindFile {
+					blobs = append(blobs, id)
+				}
+				item.Attachments = append(item.Attachments[:i], item.Attachments[i+1:]...)
+				f.items[itemID] = item
+				return blobs, nil
+			}
+		}
+	}
+	return nil, domain.ErrNotFound
+}
+
+func (f *fakeItemStore) EmptyTrash(_ context.Context) ([]string, error) {
+	var blobs []string
+	for id, item := range f.items {
+		if item.TrashedAt != nil {
+			for _, a := range item.Attachments {
+				if a.Kind == domain.KindFile {
+					blobs = append(blobs, a.ID)
+				}
+			}
+			delete(f.items, id)
+		}
+	}
+	return blobs, nil
+}
+
+func (f *fakeItemStore) TrashedItems(context.Context) ([]domain.Item, error) {
+	var out []domain.Item
+	for _, item := range f.items {
+		if item.TrashedAt != nil {
+			out = append(out, item)
+		}
+	}
+	return out, nil
+}
+
+func (f *fakeItemStore) TrashedAttachments(context.Context) ([]domain.TrashAttachment, error) {
+	var out []domain.TrashAttachment
+	for _, item := range f.items {
+		for _, a := range item.Attachments {
+			if a.State == domain.StateTrashedIndividually {
+				out = append(out, domain.TrashAttachment{Attachment: a, ItemTitle: item.Title})
+			}
+		}
+	}
+	return out, nil
+}
+
+func (f *fakeItemStore) AllAttachmentIDs(context.Context) ([]string, error) {
+	var ids []string
+	for _, item := range f.items {
+		for _, a := range item.Attachments {
+			ids = append(ids, a.ID)
+		}
+	}
+	return ids, nil
+}
+
 func (f *fakeItemStore) tagsFor(names []string) []domain.Tag {
 	tags := make([]domain.Tag, 0, len(names))
 	for _, name := range names {
