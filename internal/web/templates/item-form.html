@@ -24,8 +24,10 @@
 
   <div class="field">
     <label for="tags">Tags</label>
-    <input id="tags" name="tags" type="text" value="{{.Form.TagsValue}}" list="tag-options"
-           autocomplete="off" aria-describedby="tags-hint">
+    <div class="tag-input-wrap">
+      <input id="tags" name="tags" type="text" value="{{.Form.TagsValue}}" list="tag-options"
+             autocomplete="off" aria-describedby="tags-hint" data-tag-suggest="/tags/suggest">
+    </div>
     <datalist id="tag-options">
       {{range .Form.AllTags}}<option value="{{.Name}}"></option>{{end}}
     </datalist>

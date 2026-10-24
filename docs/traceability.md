@@ -49,7 +49,7 @@ a test (or benchmark), or marked *out of scope* where the specification says so
 | Rule | Test(s) | Status |
 |---|---|---|
 | T-1 | `TestItemService_Create_StoresTagsCaseInsensitively_T3_T5`, `TestStore_CreateAndGetItem_I2` | covered |
-| T-2 | `TestStore_SuggestTags_T2` | covered |
+| T-2 | `TestStore_SuggestTags_T2`, `TestTagSuggest_T2`, `TestItemForm_TagAutocomplete_T2` | covered |
 | T-3 | `TestCleanTagName_T3`, `TestItemService_Create_StoresTagsCaseInsensitively_T3_T5` | covered |
 | T-4 | `TestTagKey_IsCaseInsensitive_T4`, `TestStore_TagReuseIsCaseInsensitive_T4` | covered |
 | T-5 | `TestItemService_Create_StoresTagsCaseInsensitively_T3_T5`, `TestStore_UpdateReplacesTags_T5` | covered |

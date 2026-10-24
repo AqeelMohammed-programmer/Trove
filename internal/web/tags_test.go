@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,6 +31,61 @@ func TestTagsScreen_M1(t *testing.T) {
 	// Count ordering is offered.
 	if !strings.Contains(body, "sort=count") {
 		t.Errorf("count sort option missing (M-1):\n%s", body)
+	}
+}
+
+// TestTagSuggest_T2 covers the autocomplete endpoint: it returns active tags
+// that start with the query, in name order, and returns nothing for an empty
+// query instead of the whole list.
+func TestTagSuggest_T2(t *testing.T) {
+	t.Parallel()
+
+	srv, authSvc := newTestServer(t)
+	h := srv.Handler()
+	cookie := setupInstance(t, h, "hunter2hunter2")
+
+	createItem(t, h, authSvc, cookie, url.Values{"title": {"A"}, "tags": {"reading, rust"}})
+	createItem(t, h, authSvc, cookie, url.Values{"title": {"B"}, "tags": {"react"}})
+
+	rec := request(t, h, http.MethodGet, "/tags/suggest?q=rea", nil, cookie)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("suggest status = %d, want 200", rec.Code)
+	}
+	if got := rec.Header().Get("Content-Type"); !strings.HasPrefix(got, "application/json") {
+		t.Errorf("Content-Type = %q, want application/json", got)
+	}
+	var body struct {
+		Tags []string `json:"tags"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decoding suggestions: %v (body %q)", err, rec.Body.String())
+	}
+	if got := strings.Join(body.Tags, ","); got != "react,reading" {
+		t.Errorf("suggestions for %q = %v, want [react reading]", "rea", body.Tags)
+	}
+
+	// An empty query returns nothing, not the whole tag list.
+	empty := request(t, h, http.MethodGet, "/tags/suggest?q=", nil, cookie)
+	if strings.Contains(empty.Body.String(), "reading") {
+		t.Errorf("empty query returned suggestions: %s", empty.Body.String())
+	}
+}
+
+// TestItemForm_TagAutocomplete_T2 checks the form wires the tag input to the
+// suggestion endpoint and keeps the datalist as a no-JavaScript fallback.
+func TestItemForm_TagAutocomplete_T2(t *testing.T) {
+	t.Parallel()
+
+	srv, _ := newTestServer(t)
+	h := srv.Handler()
+	cookie := setupInstance(t, h, "hunter2hunter2")
+
+	body := request(t, h, http.MethodGet, "/items/new", nil, cookie).Body.String()
+	if !strings.Contains(body, `data-tag-suggest="/tags/suggest"`) {
+		t.Errorf("tag input is not wired to the suggestion endpoint (T-2):\n%s", body)
+	}
+	if !strings.Contains(body, `<datalist id="tag-options">`) {
+		t.Errorf("tag input lost its no-JavaScript datalist fallback (T-2):\n%s", body)
 	}
 }
 
