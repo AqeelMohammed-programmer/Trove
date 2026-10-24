@@ -1,0 +1,28 @@
+{{define "content"}}
+<h1>Export and import</h1>
+
+<section aria-labelledby="export-heading">
+  <h2 id="export-heading">Export</h2>
+  <p>Download the whole repository as one ZIP archive. It contains
+  <code>data.json</code> and a <code>files/</code> directory with the content of
+  every copied file. The password and sessions are never included.</p>
+  <p><a class="primary as-button" href="/export">Download archive</a></p>
+</section>
+
+<section aria-labelledby="import-heading">
+  <h2 id="import-heading">Import</h2>
+  <p>Import is <strong>restore-only</strong>: it works only into an empty
+  repository. The whole archive is validated before anything is changed, and the
+  import is all-or-nothing. It does not change the password.</p>
+  <form method="post" action="/import" enctype="multipart/form-data" class="form">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <div class="field">
+      <label for="archive">Archive file</label>
+      <input id="archive" name="archive" type="file" accept=".zip,application/zip" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="primary">Import archive</button>
+    </div>
+  </form>
+</section>
+{{end}}

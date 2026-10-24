@@ -56,7 +56,7 @@ Dependency rules (`AGENTS.md` section 4.2):
 | `internal/service` | Use cases implementing spec rules. | Item and tag use cases implemented. |
 | `internal/blob` | Streaming, hashing and atomic storage of copied files. | Implemented. |
 | `internal/auth` | Argon2id, sessions, login throttling. | Implemented. |
-| `internal/exchange` | ZIP export and restore-only import. | Not created yet (M8). |
+| `internal/exchange` | ZIP export and restore-only import. | Implemented. |
 
 Empty packages are deliberately not created ahead of time: a milestone creates
 them when it has code and tests to put in them.

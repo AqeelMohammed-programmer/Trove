@@ -116,6 +116,9 @@ func (s *Server) routes() {
 	s.handle("POST", "/items/{id}/favorite", "/items/example/favorite", false, s.authenticated(s.handleFavorite))
 	s.handle("GET", "/attachments/{id}/download", "/attachments/example/download", false, s.authenticated(s.handleDownload))
 	s.handle("GET", "/form/link-row", "/form/link-row", false, s.authenticated(s.handleLinkRow))
+	s.handle("GET", "/export-import", "/export-import", false, s.authenticated(s.handleExportImportPage))
+	s.handle("GET", "/export", "/export", false, s.authenticated(s.handleExport))
+	s.handle("POST", "/import", "/import", false, s.authenticated(s.handleImport))
 	s.handle("GET", "/tags", "/tags", false, s.authenticated(s.handleTags))
 	s.handle("POST", "/tags/{id}/rename", "/tags/example/rename", false, s.authenticated(s.handleRenameTag))
 	s.handle("POST", "/tags/{id}/merge", "/tags/example/merge", false, s.authenticated(s.handleMergeTag))
@@ -210,7 +213,7 @@ func (s *Server) renderFragment(w http.ResponseWriter, name string, data any) {
 // partials. A failure is a programming error found at startup, not in a
 // request.
 func mustParseTemplates() map[string]*template.Template {
-	pages := []string{"list", "item", "item-form", "trash", "duplicates", "tags", "login", "setup", "change-password"}
+	pages := []string{"list", "item", "item-form", "trash", "duplicates", "tags", "export-import", "login", "setup", "change-password"}
 	out := make(map[string]*template.Template, len(pages))
 	for _, page := range pages {
 		t, err := template.ParseFS(assets,

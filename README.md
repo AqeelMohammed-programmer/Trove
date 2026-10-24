@@ -30,11 +30,13 @@ Milestones **M0–M2** are complete. What works today:
 - Duplicates: add-time warnings by exact URL or SHA-256, and a read-only
   duplicate report grouped by normalized URL and content hash.
 - Tag management: rename, merge and delete tags across active and trashed items.
+- Export and import: one ZIP archive for the whole repository, with validated,
+  all-or-nothing restore into a fresh instance.
 - Strict security headers, CSRF protection and a strict Content-Security-Policy
   on every response.
 
-Export/import and hardening arrive in later milestones. See the
-[milestone table](docs/README.md#milestones) for the full order.
+Hardening (performance check, Docker, accessibility and documentation review)
+arrives in the final milestone. See the [milestone table](docs/README.md#milestones).
 
 ## Quick start
 

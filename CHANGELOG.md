@@ -104,6 +104,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   how many are affected (`M-4`). None of these change `updated_at` (`M-5`); the
   search index is refreshed so renamed or merged tags stay searchable.
 
+### Added
+
+- Export and import (M8): the whole repository exports as one ZIP archive
+  holding `data.json` and a `files/` directory, with no password, hash or
+  session data (`E-1`..`E-4`). Import is restore-only into an empty repository
+  (`E-5`) and validates the entire archive first: recognised format and
+  version, well-formed metadata, every referenced file present, and matching
+  SHA-256 for each file, with zip-slip protection (`E-6`). It is all-or-nothing
+  (`E-7`), preserves identifiers, timestamps, trash states, favorites, tags,
+  labels and content (`E-8`), leaves the password alone (`E-9`), and a full
+  export-then-import round trip reproduces the repository (`E-10`).
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

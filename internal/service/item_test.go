@@ -282,6 +282,25 @@ func (f *fakeItemStore) RenameTag(context.Context, string, string) error { retur
 func (f *fakeItemStore) MergeTags(context.Context, string, string) error { return nil }
 func (f *fakeItemStore) DeleteTag(context.Context, string) error         { return nil }
 
+func (f *fakeItemStore) AllItems(context.Context) ([]domain.Item, error) {
+	out := make([]domain.Item, 0, len(f.items))
+	for _, item := range f.items {
+		out = append(out, item)
+	}
+	return out, nil
+}
+
+func (f *fakeItemStore) RepositoryEmpty(context.Context) (bool, error) {
+	return len(f.items) == 0 && len(f.tags) == 0, nil
+}
+
+func (f *fakeItemStore) ImportItems(_ context.Context, items []domain.Item) error {
+	for _, item := range items {
+		f.items[item.ID] = item
+	}
+	return nil
+}
+
 func (f *fakeItemStore) tagsFor(names []string) []domain.Tag {
 	tags := make([]domain.Tag, 0, len(names))
 	for _, name := range names {

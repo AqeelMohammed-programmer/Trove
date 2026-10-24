@@ -47,6 +47,9 @@ type ItemStore interface {
 	RenameTag(ctx context.Context, id, newName string) error
 	MergeTags(ctx context.Context, sourceID, targetID string) error
 	DeleteTag(ctx context.Context, id string) error
+	AllItems(ctx context.Context) ([]domain.Item, error)
+	RepositoryEmpty(ctx context.Context) (bool, error)
+	ImportItems(ctx context.Context, items []domain.Item) error
 }
 
 // ItemService implements item, tag and attachment use cases.

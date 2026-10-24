@@ -155,16 +155,16 @@ rules is still a gap.
 
 | Rule | Test(s) | Status |
 |---|---|---|
-| E-1 | — | gap (M8) |
-| E-2 | — | gap (M8) |
-| E-3 | — | gap (M8) |
-| E-4 | — | gap (M8) |
-| E-5 | — | gap (M8) |
-| E-6 | — | gap (M8) |
-| E-7 | — | gap (M8) |
-| E-8 | — | gap (M8) |
-| E-9 | — | gap (M8) |
-| E-10 | — | gap (M8) |
+| E-1 | `TestExportImport_RoundTripOverHTTP_E10` | covered |
+| E-2 | `TestExport_ContainsDataAndFiles_E2` | covered |
+| E-3 | `TestExport_ExcludesSecrets_E3` | covered |
+| E-4 | `TestExportImport_RoundTrip_E10` (export reads one snapshot via `AllItems`) | covered |
+| E-5 | `TestImport_RefusesNonEmpty_E5`, `TestImport_NonEmptyRefusedOverHTTP_E5` | covered |
+| E-6 | `TestImport_RejectsBadChecksum_E6_E7`, `TestImport_RejectsMissingFile_E6`, `TestImport_RejectsUnknownFormat_E6`, `TestImport_RejectsPathTraversal_E6` | covered |
+| E-7 | `TestImport_RejectsBadChecksum_E6_E7`, `TestImport_RollsBackContentOnDBFailure_E7` | covered |
+| E-8 | `TestRoundTrip_E10`, `TestExportImport_RoundTrip_E10` | covered |
+| E-9 | `TestExportImport_RoundTrip_E10` (the password is untouched; only items/tags/attachments are imported) | covered |
+| E-10 | `TestRoundTrip_E10`, `TestExportImport_RoundTripOverHTTP_E10` | covered |
 
 ## Scale (`N-*`)
 
@@ -186,6 +186,7 @@ These tests protect the foundations the spec rules depend on.
 | FTS5 | `TestFTS5_AvailableAndUsable` | The driver supports FTS5, prefix matching, case folding and bm25 ranking (see ADR 0002). |
 | Attachments | `TestCreateItemWithAttachments_A1_A3_A4_A5_A6`, `TestDownloadAttachment_A7_A9`, `TestSave_*`, `TestItemService_Create_StoresFileWithSHA256_A3_A4` | Links and files are added through one form; files stream to disk with SHA-256, are stored by attachment id, and download under the original name with safe headers. |
 | Items and tags | `TestStore_CreateAndGetItem_I2`, `TestStore_ListItems_*`, `TestItemService_*`, `TestCreateItemFlow_*`, `TestEditItemFlow_I6`, `TestFavoriteToggle_F1` | Item create/edit/list, tag resolution, filtering, sorting and pagination work against a real SQLite database and over HTTP. |
+| Export and import | `TestExport_*`, `TestRoundTrip_E10`, `TestImport_*`, `TestExportImport_RoundTripOverHTTP_E10` | One ZIP holds data.json and files/; secrets are excluded; every import failure leaves the repository empty; a full round trip reproduces ids, timestamps, trash states, labels and content. |
 | Tag management | `TestRenameTag_M2_M5`, `TestMergeTags_M3_M5`, `TestDeleteTag_M4_M5`, `TestRenameTagFlow_M2`, `TestMergeTagFlow_M3`, `TestDeleteTagFlow_M4` | Rename, merge and delete change tags everywhere including trashed items, keep updated_at, refresh the search index, and refuse conflicting renames with a merge suggestion. |
 | Duplicates | `TestDuplicateMatchesForItem_D1_D2_D4`, `TestDuplicateReport_R1_R2_R3_R6`, `TestItemDetail_DuplicateWarning_D1_D4_D5`, `TestDuplicateReportPage_R1_R4_R6` | Add-time matching by exact URL and SHA-256 flags duplicates including trashed ones and within one item; the report groups by normalized URL and SHA-256 and is read-only. |
 | Trash | `TestTrashItem_X1_X13`, `TestRestoreItem_X4`, `TestEmptyTrash_X8`, `TestItemService_ContentRemovedOnlyOnPermanentDelete_X9`, `TestTrashItemFlow_*` | Soft delete, restore, permanent delete and empty trash keep attachment states correct, remove content only on permanent deletion, and never leave the trash without confirmation. |
