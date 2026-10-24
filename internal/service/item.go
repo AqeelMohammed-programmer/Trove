@@ -39,6 +39,8 @@ type ItemStore interface {
 	TrashedItems(ctx context.Context) ([]domain.Item, error)
 	TrashedAttachments(ctx context.Context) ([]domain.TrashAttachment, error)
 	AllAttachmentIDs(ctx context.Context) ([]string, error)
+	DuplicateMatchesForItem(ctx context.Context, itemID string) ([]domain.DuplicateMatch, error)
+	DuplicateReport(ctx context.Context) ([]domain.DuplicateGroup, error)
 }
 
 // ItemService implements item, tag and attachment use cases.

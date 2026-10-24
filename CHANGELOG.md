@@ -84,6 +84,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   attachments are independent (`X-10`), trashed items keep their tags (`X-11`),
   and orphaned content is cleaned up at startup (`X-12`).
 
+### Added
+
+- Duplicate handling (M6): the item detail view warns when an attachment matches
+  another by exact URL or the same SHA-256, including matches inside the same
+  item and trashed ones, and offers to open the matching item or restore a
+  trashed one (`D-1`..`D-5`). A read-only **Duplicates** screen groups matching
+  attachments by normalized URL (fragment and one trailing slash removed) and by
+  SHA-256, marks trashed entries and links each to its item (`R-1`..`R-6`).
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

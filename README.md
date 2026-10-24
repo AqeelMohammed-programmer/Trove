@@ -27,12 +27,13 @@ Milestones **M0–M2** are complete. What works today:
   relevance ranking and combination with every filter.
 - Trash: soft delete, restore, permanent delete and empty trash, without ever
   losing data by accident.
+- Duplicates: add-time warnings by exact URL or SHA-256, and a read-only
+  duplicate report grouped by normalized URL and content hash.
 - Strict security headers, CSRF protection and a strict Content-Security-Policy
   on every response.
 
-Duplicates, tag management, export/import and hardening arrive in later
-milestones. See the [milestone table](docs/README.md#milestones) for the full
-order.
+Tag management, export/import and hardening arrive in later milestones. See the
+[milestone table](docs/README.md#milestones) for the full order.
 
 ## Quick start
 

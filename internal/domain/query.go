@@ -64,3 +64,31 @@ type TrashList struct {
 	// Attachments are individually trashed attachments of active items.
 	Attachments []TrashAttachment
 }
+
+// DuplicateMatch is another attachment that matches one of an item's
+// attachments by exact URL or SHA-256 (D-1, D-2, D-4).
+type DuplicateMatch struct {
+	Attachment Attachment
+	// ItemID and ItemTitle identify the owning item.
+	ItemID    string
+	ItemTitle string
+	// ItemTrashed and AttachmentTrashed mark trashed entries (D-5, R-3).
+	ItemTrashed       bool
+	AttachmentTrashed bool
+}
+
+// DuplicateEntry is one attachment in a duplicate report group (R-2, R-4).
+type DuplicateEntry struct {
+	Attachment        Attachment
+	ItemID            string
+	ItemTitle         string
+	ItemTrashed       bool
+	AttachmentTrashed bool
+}
+
+// DuplicateGroup is a set of two or more matching attachments (R-2).
+type DuplicateGroup struct {
+	Kind    AttachmentKind
+	Key     string
+	Entries []DuplicateEntry
+}

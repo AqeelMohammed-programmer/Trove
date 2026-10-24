@@ -237,6 +237,15 @@ func (s *Server) handleShowItem(w http.ResponseWriter, r *http.Request) {
 	if item.TrashedAt != nil {
 		data["Trashed"] = item.TrashedAt.Format("2 Jan 2006")
 	}
+
+	// Warn about attachments that duplicate others, including trashed ones
+	// (D-1..D-5).
+	matches, matchErr := s.items.ItemDuplicates(r.Context(), item.ID)
+	if matchErr != nil {
+		s.serverError(w, r, "finding duplicates", matchErr)
+		return
+	}
+	data["Duplicates"] = duplicateViews(matches)
 	s.render(w, http.StatusOK, "item", data)
 }
 
@@ -641,4 +650,36 @@ func localPath(raw, fallback string) string {
 func tagsFromData(data map[string]any) []domain.TagCount {
 	tags, _ := data["AllTags"].([]domain.TagCount)
 	return tags
+}
+
+// duplicateView is one duplicate match rendered on the item detail page (D-5).
+type duplicateView struct {
+	Kind         string
+	Label        string
+	URL          string
+	FileName     string
+	ItemID       string
+	ItemTitle    string
+	ItemTrashed  bool
+	AttachmentID string
+	Trashed      bool
+}
+
+func duplicateViews(matches []domain.DuplicateMatch) []duplicateView {
+	views := make([]duplicateView, 0, len(matches))
+	for _, m := range matches {
+		view := duplicateView{
+			Kind:         string(m.Attachment.Kind),
+			Label:        m.Attachment.Label,
+			URL:          m.Attachment.URL,
+			FileName:     m.Attachment.FileName,
+			ItemID:       m.ItemID,
+			ItemTitle:    m.ItemTitle,
+			ItemTrashed:  m.ItemTrashed,
+			AttachmentID: m.Attachment.ID,
+			Trashed:      m.ItemTrashed || m.AttachmentTrashed,
+		}
+		views = append(views, view)
+	}
+	return views
 }

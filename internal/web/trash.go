@@ -188,3 +188,59 @@ func attachmentToView(a domain.Attachment) attachmentView {
 	}
 	return view
 }
+
+// duplicateGroupView is one duplicate report group (R-2, R-4).
+type duplicateGroupView struct {
+	Kind    string
+	Key     string
+	Entries []duplicateEntryView
+}
+
+type duplicateEntryView struct {
+	Kind        string
+	Label       string
+	URL         string
+	FileName    string
+	ItemID      string
+	ItemTitle   string
+	ItemTrashed bool
+	Trashed     bool
+}
+
+// handleDuplicates renders the duplicate report (R-1..R-6).
+func (s *Server) handleDuplicates(w http.ResponseWriter, r *http.Request) {
+	groups, err := s.items.Duplicates(r.Context())
+	if err != nil {
+		s.serverError(w, r, "building duplicate report", err)
+		return
+	}
+	data, err := s.itemPageData(r.Context(), r)
+	if err != nil {
+		s.serverError(w, r, "loading tags", err)
+		return
+	}
+
+	views := make([]duplicateGroupView, 0, len(groups))
+	for _, group := range groups {
+		view := duplicateGroupView{Kind: string(group.Kind), Key: group.Key}
+		for _, entry := range group.Entries {
+			view.Entries = append(view.Entries, duplicateEntryView{
+				Kind:        string(entry.Attachment.Kind),
+				Label:       entry.Attachment.Label,
+				URL:         entry.Attachment.URL,
+				FileName:    entry.Attachment.FileName,
+				ItemID:      entry.ItemID,
+				ItemTitle:   entry.ItemTitle,
+				ItemTrashed: entry.ItemTrashed,
+				Trashed:     entry.ItemTrashed || entry.AttachmentTrashed,
+			})
+		}
+		views = append(views, view)
+	}
+
+	data["Title"] = "Duplicates"
+	data["Nav"] = "duplicates"
+	data["Groups"] = views
+	data["Empty"] = len(views) == 0
+	s.render(w, http.StatusOK, "duplicates", data)
+}

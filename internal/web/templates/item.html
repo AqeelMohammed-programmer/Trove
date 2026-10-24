@@ -25,6 +25,28 @@
   </div>
   {{end}}
 
+  {{if .Duplicates}}
+  <section class="duplicate-warning" aria-labelledby="dup-heading">
+    <h2 id="dup-heading">Possible duplicates</h2>
+    <p class="hint">These attachments match others by exact URL or SHA-256.</p>
+    <ul>
+      {{range .Duplicates}}
+      <li>
+        <span class="kind">{{if eq .Kind "link"}}Link{{else}}File{{end}}</span>
+        <a href="/items/{{.ItemID}}">{{.ItemTitle}}</a>
+        {{if .Trashed}}
+        <span class="chip">trashed</span>
+        <form method="post" action="/items/{{.ItemID}}/restore" class="inline-form">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <button type="submit" class="link-button">Restore item</button>
+        </form>
+        {{end}}
+      </li>
+      {{end}}
+    </ul>
+  </section>
+  {{end}}
+
   <section class="attachments" aria-labelledby="attachments-heading">
     <h2 id="attachments-heading">Attachments</h2>
     {{if .Item.Attachments}}

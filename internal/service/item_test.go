@@ -241,6 +241,14 @@ func (f *fakeItemStore) AllAttachmentIDs(context.Context) ([]string, error) {
 	return ids, nil
 }
 
+func (f *fakeItemStore) DuplicateMatchesForItem(context.Context, string) ([]domain.DuplicateMatch, error) {
+	return nil, nil
+}
+
+func (f *fakeItemStore) DuplicateReport(context.Context) ([]domain.DuplicateGroup, error) {
+	return nil, nil
+}
+
 func (f *fakeItemStore) tagsFor(names []string) []domain.Tag {
 	tags := make([]domain.Tag, 0, len(names))
 	for _, name := range names {

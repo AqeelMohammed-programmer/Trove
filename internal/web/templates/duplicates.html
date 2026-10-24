@@ -1,0 +1,32 @@
+{{define "content"}}
+<div class="page-head">
+  <h1>Duplicates</h1>
+</div>
+<p class="hint">Links match when their URLs are equal after removing a
+<code>#fragment</code> and one trailing slash. Files match when their SHA-256
+values are equal. Trashed entries are shown and marked. This report is
+read-only; resolve duplicates from the item or the trash.</p>
+
+{{if .Empty}}
+<div class="empty-state">
+  <p>No duplicates found.</p>
+</div>
+{{else}}
+<ul class="duplicate-groups">
+  {{range .Groups}}
+  <li class="duplicate-group">
+    <h2 class="duplicate-key"><span class="kind">{{if eq .Kind "link"}}Link{{else}}File{{end}}</span> {{.Key}}</h2>
+    <ul class="duplicate-entries">
+      {{range .Entries}}
+      <li>
+        <a href="/items/{{.ItemID}}">{{.ItemTitle}}</a>
+        <span class="attachment-name">{{if .Label}}{{.Label}}{{else if eq .Kind "link"}}{{.URL}}{{else}}{{.FileName}}{{end}}</span>
+        {{if .Trashed}}<span class="chip">trashed</span>{{end}}
+      </li>
+      {{end}}
+    </ul>
+  </li>
+  {{end}}
+</ul>
+{{end}}
+{{end}}
