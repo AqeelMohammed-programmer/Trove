@@ -93,6 +93,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   attachments by normalized URL (fragment and one trailing slash removed) and by
   SHA-256, marks trashed entries and links each to its item (`R-1`..`R-6`).
 
+### Added
+
+- Tag management (M7): a Tags screen lists tags shown under `T-6` with active
+  item counts, alphabetical by default and sortable by count (`M-1`). Rename
+  changes the spelling everywhere and refuses a clash with another tag,
+  suggesting a merge, while changing only capitalization is allowed (`M-2`).
+  Merge moves every item's source tag to the target without duplicates and
+  removes the source (`M-3`). Delete removes a tag from every item after showing
+  how many are affected (`M-4`). None of these change `updated_at` (`M-5`); the
+  search index is refreshed so renamed or merged tags stay searchable.
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

@@ -120,11 +120,11 @@ rules is still a gap.
 
 | Rule | Test(s) | Status |
 |---|---|---|
-| M-1 | — | gap (M7) |
-| M-2 | — | gap (M7) |
-| M-3 | — | gap (M7) |
-| M-4 | — | gap (M7) |
-| M-5 | — | gap (M7) |
+| M-1 | `TestTagsScreen_M1`, `TestItemService_TagsForManagement_CountOrder` | covered |
+| M-2 | `TestRenameTag_M2_M5`, `TestRenameTag_ConflictOtherTag_M2`, `TestRenameTag_ChangeOfCapitalizationAllowed_M2`, `TestRenameTagFlow_M2`, `TestRenameTag_ConflictSuggestsMerge_M2` | covered |
+| M-3 | `TestMergeTags_M3_M5`, `TestMergeTagFlow_M3`, `TestItemService_MergeTags_RejectsSameAndEmpty` | covered |
+| M-4 | `TestDeleteTag_M4_M5`, `TestDeleteTagFlow_M4` | covered |
+| M-5 | `TestRenameTag_M2_M5`, `TestMergeTags_M3_M5`, `TestDeleteTag_M4_M5` (updated_at unchanged) | covered |
 
 ## Markdown (`V-*`)
 
@@ -186,6 +186,7 @@ These tests protect the foundations the spec rules depend on.
 | FTS5 | `TestFTS5_AvailableAndUsable` | The driver supports FTS5, prefix matching, case folding and bm25 ranking (see ADR 0002). |
 | Attachments | `TestCreateItemWithAttachments_A1_A3_A4_A5_A6`, `TestDownloadAttachment_A7_A9`, `TestSave_*`, `TestItemService_Create_StoresFileWithSHA256_A3_A4` | Links and files are added through one form; files stream to disk with SHA-256, are stored by attachment id, and download under the original name with safe headers. |
 | Items and tags | `TestStore_CreateAndGetItem_I2`, `TestStore_ListItems_*`, `TestItemService_*`, `TestCreateItemFlow_*`, `TestEditItemFlow_I6`, `TestFavoriteToggle_F1` | Item create/edit/list, tag resolution, filtering, sorting and pagination work against a real SQLite database and over HTTP. |
+| Tag management | `TestRenameTag_M2_M5`, `TestMergeTags_M3_M5`, `TestDeleteTag_M4_M5`, `TestRenameTagFlow_M2`, `TestMergeTagFlow_M3`, `TestDeleteTagFlow_M4` | Rename, merge and delete change tags everywhere including trashed items, keep updated_at, refresh the search index, and refuse conflicting renames with a merge suggestion. |
 | Duplicates | `TestDuplicateMatchesForItem_D1_D2_D4`, `TestDuplicateReport_R1_R2_R3_R6`, `TestItemDetail_DuplicateWarning_D1_D4_D5`, `TestDuplicateReportPage_R1_R4_R6` | Add-time matching by exact URL and SHA-256 flags duplicates including trashed ones and within one item; the report groups by normalized URL and SHA-256 and is read-only. |
 | Trash | `TestTrashItem_X1_X13`, `TestRestoreItem_X4`, `TestEmptyTrash_X8`, `TestItemService_ContentRemovedOnlyOnPermanentDelete_X9`, `TestTrashItemFlow_*` | Soft delete, restore, permanent delete and empty trash keep attachment states correct, remove content only on permanent deletion, and never leave the trash without confirmation. |
 | Search safety | `TestSearch_SyntaxInjectionIsInert`, `TestBuildMatch` | No user input reaches FTS5 as syntax; every operator-like query is treated as literal text. |

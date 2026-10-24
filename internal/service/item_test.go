@@ -249,6 +249,39 @@ func (f *fakeItemStore) DuplicateReport(context.Context) ([]domain.DuplicateGrou
 	return nil, nil
 }
 
+func (f *fakeItemStore) TagByID(_ context.Context, id string) (domain.Tag, error) {
+	for _, tag := range f.tags {
+		if tag.ID == id {
+			return tag, nil
+		}
+	}
+	return domain.Tag{}, domain.ErrNotFound
+}
+
+func (f *fakeItemStore) TagByNameCaseInsensitive(_ context.Context, name string) (domain.Tag, error) {
+	tag, ok := f.tags[domain.TagKey(name)]
+	if !ok {
+		return domain.Tag{}, domain.ErrNotFound
+	}
+	return tag, nil
+}
+
+func (f *fakeItemStore) TagUsage(_ context.Context, id string) (int, error) {
+	count := 0
+	for _, item := range f.items {
+		for _, tag := range item.Tags {
+			if tag.ID == id {
+				count++
+			}
+		}
+	}
+	return count, nil
+}
+
+func (f *fakeItemStore) RenameTag(context.Context, string, string) error { return nil }
+func (f *fakeItemStore) MergeTags(context.Context, string, string) error { return nil }
+func (f *fakeItemStore) DeleteTag(context.Context, string) error         { return nil }
+
 func (f *fakeItemStore) tagsFor(names []string) []domain.Tag {
 	tags := make([]domain.Tag, 0, len(names))
 	for _, name := range names {

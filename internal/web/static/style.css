@@ -821,3 +821,59 @@ textarea {
   font-size: 1rem;
   margin: 0 0 0.35rem;
 }
+
+/* --- Tag management (M7) ------------------------------------------------ */
+
+.sort-toggle {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.sort-toggle a[aria-current="true"] {
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.tag-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tag-table th,
+.tag-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tag-table .numeric {
+  font-variant-numeric: tabular-nums;
+}
+
+.tag-table form {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.tag-table input[type="text"],
+.tag-table select {
+  padding: 0.3rem 0.4rem;
+}
+
+@media (max-width: 48rem) {
+  .tag-table,
+  .tag-table thead,
+  .tag-table tbody,
+  .tag-table th,
+  .tag-table td,
+  .tag-table tr {
+    display: block;
+  }
+
+  .tag-table thead {
+    display: none;
+  }
+}

@@ -41,6 +41,12 @@ type ItemStore interface {
 	AllAttachmentIDs(ctx context.Context) ([]string, error)
 	DuplicateMatchesForItem(ctx context.Context, itemID string) ([]domain.DuplicateMatch, error)
 	DuplicateReport(ctx context.Context) ([]domain.DuplicateGroup, error)
+	TagByID(ctx context.Context, id string) (domain.Tag, error)
+	TagByNameCaseInsensitive(ctx context.Context, name string) (domain.Tag, error)
+	TagUsage(ctx context.Context, id string) (int, error)
+	RenameTag(ctx context.Context, id, newName string) error
+	MergeTags(ctx context.Context, sourceID, targetID string) error
+	DeleteTag(ctx context.Context, id string) error
 }
 
 // ItemService implements item, tag and attachment use cases.

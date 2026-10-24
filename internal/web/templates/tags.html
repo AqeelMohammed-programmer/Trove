@@ -1,0 +1,55 @@
+{{define "content"}}
+<div class="page-head">
+  <h1>Tags</h1>
+  <div class="sort-toggle">
+    <a href="/tags" {{if not .CountSort}}aria-current="true"{{end}}>Alphabetical</a>
+    <a href="/tags?sort=count" {{if .CountSort}}aria-current="true"{{end}}>By count</a>
+  </div>
+</div>
+
+{{if .Empty}}
+<div class="empty-state">
+  <p>No tags yet. Tags appear here once items use them.</p>
+</div>
+{{else}}
+<table class="tag-table">
+  <thead>
+    <tr><th scope="col">Tag</th><th scope="col">Items</th><th scope="col">Rename</th><th scope="col">Merge into</th><th scope="col"></th></tr>
+  </thead>
+  <tbody>
+    {{range .Tags}}
+    <tr>
+      <th scope="row"><a href="/?tag={{.Name}}">{{.Name}}</a></th>
+      <td class="numeric">{{.Count}}</td>
+      <td>
+        <form method="post" action="/tags/{{.ID}}/rename" class="inline-form">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <label class="visually-hidden" for="rename-{{.ID}}">New name for {{.Name}}</label>
+          <input id="rename-{{.ID}}" name="name" type="text" value="{{.Name}}" maxlength="50" required>
+          <button type="submit" class="secondary">Rename</button>
+        </form>
+      </td>
+      <td>
+        <form method="post" action="/tags/{{.ID}}/merge" class="inline-form">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <label class="visually-hidden" for="merge-{{.ID}}">Merge {{.Name}} into</label>
+          <select id="merge-{{.ID}}" name="target" required>
+            <option value="">Choose…</option>
+            {{range $.Tags}}{{if ne .ID $.ID}}<option value="{{.ID}}">{{.Name}}</option>{{end}}{{end}}
+          </select>
+          <button type="submit" class="secondary">Merge</button>
+        </form>
+      </td>
+      <td>
+        <form method="post" action="/tags/{{.ID}}/delete" class="inline-form"
+              onsubmit="return confirm('Delete this tag from every item? It affects {{.Count}} item(s) and cannot be undone.');">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <button type="submit" class="secondary danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{end}}
