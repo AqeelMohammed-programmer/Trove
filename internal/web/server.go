@@ -1,32 +1,60 @@
-// Package web implements the HTTP interface: routing, middleware and, from
-// milestone M2 onwards, template rendering. Handlers validate input, call a
-// service and render a template; business rules live in internal/service.
+// Package web implements the HTTP interface: routing, middleware and template
+// rendering. Handlers validate input, call a service and render a template;
+// business rules live in the service packages.
 package web
 
 import (
-	"io"
+	"context"
+	"embed"
+	"html/template"
+	"io/fs"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
+
+	"Trove/internal/app"
+	"Trove/internal/auth"
 )
 
 // contentSecurityPolicy forbids anything that is not served by this
-// application: no inline scripts or styles, no third-party origins. It is
-// strict from day one so that later additions (HTMX, styles) have to fit it.
+// application: no inline scripts or styles, no third-party origins.
 const contentSecurityPolicy = "default-src 'self'; base-uri 'none'; " +
-	"form-action 'self'; frame-ancestors 'none'; object-src 'none'"
+	"form-action 'self'; frame-ancestors 'none'; object-src 'none'; " +
+	"img-src 'self'; style-src 'self'; script-src 'self'"
+
+// maxFormBytes caps ordinary form bodies. File uploads stream separately and
+// are not subject to this cap (spec N-1, milestone M3).
+const maxFormBytes = 1 << 20
 
 // Options configures a Server.
 type Options struct {
-	// Logger receives request logs. Nil means slog.Default().
+	// Logger receives request and error logs. Nil means slog.Default().
 	Logger *slog.Logger
+	// Auth is the authentication service. Required.
+	Auth *auth.Service
+	// SecureCookie marks the session cookie Secure (HTTPS deployments).
+	SecureCookie bool
 }
 
-// Server is the application's HTTP handler. Create it with New and expose it
-// through Handler.
+// Server is the application's HTTP handler.
 type Server struct {
-	logger *slog.Logger
-	mux    *http.ServeMux
+	logger       *slog.Logger
+	auth         *auth.Service
+	secureCookie bool
+	mux          *http.ServeMux
+	templates    map[string]*template.Template
+	registered   []route
+}
+
+// route is one registered endpoint. Tests use the list to prove that every
+// non-public route rejects unauthenticated requests (U-3).
+type route struct {
+	method  string
+	pattern string
+	sample  string
+	public  bool
 }
 
 // New builds a Server with all routes registered.
@@ -35,25 +63,71 @@ func New(opts Options) *Server {
 	if logger == nil {
 		logger = slog.Default()
 	}
+	if opts.Auth == nil {
+		panic("web: Options.Auth is required")
+	}
 	s := &Server{
-		logger: logger,
-		mux:    http.NewServeMux(),
+		logger:       logger,
+		auth:         opts.Auth,
+		secureCookie: opts.SecureCookie,
+		mux:          http.NewServeMux(),
+		templates:    mustParseTemplates(),
 	}
 	s.routes()
 	return s
 }
 
-// routes registers every endpoint. Method-and-path patterns give automatic
-// 405 responses for the wrong method. Only /healthz exists at M0; it is the
-// one route that is allowed to work without a session (AGENTS.md section 7).
-// The route-protection test arrives with authentication (M1).
+// routes registers every endpoint. Public routes are limited to health,
+// static assets, first-run setup and login (AGENTS.md section 7).
 func (s *Server) routes() {
-	s.mux.HandleFunc("GET /healthz", s.handleHealthz)
+	s.handle("GET", "/healthz", "/healthz", true, s.handleHealthz)
+
+	staticFS, err := fs.Sub(assets, "static")
+	if err != nil {
+		panic("web: static assets are missing: " + err.Error())
+	}
+	files := http.StripPrefix("/static/", http.FileServerFS(staticFS))
+	s.handle("GET", "/static/", "/static/style.css", true, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=300")
+		files.ServeHTTP(w, r)
+	})
+
+	s.handle("GET", "/setup", "/setup", true, s.handleSetupPage)
+	s.handle("POST", "/setup", "/setup", true, s.handleSetup)
+	s.handle("GET", "/login", "/login", true, s.handleLoginPage)
+	s.handle("POST", "/login", "/login", true, s.handleLogin)
+
+	s.handle("GET", "/", "/", false, s.authenticated(s.handleHome))
+	s.handle("POST", "/logout", "/logout", false, s.authenticated(s.handleLogout))
+	s.handle("GET", "/change-password", "/change-password", false, s.authenticated(s.handleChangePasswordPage))
+	s.handle("POST", "/change-password", "/change-password", false, s.authenticated(s.handleChangePassword))
+}
+
+func (s *Server) handle(method, pattern, sample string, public bool, h http.HandlerFunc) {
+	s.mux.Handle(method+" "+pattern, h)
+	s.registered = append(s.registered, route{method: method, pattern: pattern, sample: sample, public: public})
 }
 
 // Handler returns the server wrapped in the outer middleware.
 func (s *Server) Handler() http.Handler {
-	return s.logRequests(securityHeaders(s.mux))
+	return s.logRequests(securityHeaders(sameOriginOnly(s.mux)))
+}
+
+// RegisteredRoutes exposes the registered routes to tests in other packages.
+func (s *Server) RegisteredRoutes() []RouteInfo {
+	out := make([]RouteInfo, len(s.registered))
+	for i, r := range s.registered {
+		out[i] = RouteInfo{Method: r.method, Pattern: r.pattern, Sample: r.sample, Public: r.public}
+	}
+	return out
+}
+
+// RouteInfo is a read-only description of a registered route.
+type RouteInfo struct {
+	Method  string
+	Pattern string
+	Sample  string
+	Public  bool
 }
 
 // handleHealthz reports liveness and nothing else: no data, no version.
@@ -61,9 +135,167 @@ func (s *Server) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(http.StatusOK)
-	if _, err := io.WriteString(w, "ok\n"); err != nil {
+	if _, err := w.Write([]byte("ok\n")); err != nil {
 		s.logger.WarnContext(r.Context(), "writing health response", "error", err)
 	}
+}
+
+// render executes the layout for a page. Callers pass the page name without
+// the .html suffix.
+func (s *Server) render(w http.ResponseWriter, status int, page string, data map[string]any) {
+	t, ok := s.templates[page]
+	if !ok {
+		s.logger.Error("rendering unknown page", "page", page)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if data == nil {
+		data = map[string]any{}
+	}
+	data["App"] = app.Name
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+	if err := t.ExecuteTemplate(w, "layout", data); err != nil {
+		s.logger.Error("rendering page", "page", page, "error", err)
+	}
+}
+
+// mustParseTemplates parses every page together with the layout. A failure is
+// a programming error found at startup, not in a request.
+func mustParseTemplates() map[string]*template.Template {
+	pages := []string{"home", "login", "setup", "change-password"}
+	out := make(map[string]*template.Template, len(pages))
+	for _, page := range pages {
+		t, err := template.ParseFS(assets, "templates/layout.html", "templates/"+page+".html")
+		if err != nil {
+			panic("web: parsing template " + page + ": " + err.Error())
+		}
+		out[page] = t
+	}
+	return out
+}
+
+type sessionContextKey struct{}
+
+// authenticated requires a live session and puts it in the request context.
+func (s *Server) authenticated(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		sess, ok := s.currentSession(r)
+		if !ok {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		next(w, r.WithContext(context.WithValue(r.Context(), sessionContextKey{}, sess)))
+	}
+}
+
+func (s *Server) currentSession(r *http.Request) (auth.Session, bool) {
+	cookie, err := r.Cookie(auth.CookieName)
+	if err != nil || cookie.Value == "" {
+		return auth.Session{}, false
+	}
+	sess, err := s.auth.Authenticate(r.Context(), cookie.Value)
+	if err != nil {
+		return auth.Session{}, false
+	}
+	return sess, true
+}
+
+func sessionFromContext(ctx context.Context) (auth.Session, bool) {
+	sess, ok := ctx.Value(sessionContextKey{}).(auth.Session)
+	return sess, ok
+}
+
+// pageData seeds template data with the session and CSRF token when present.
+func pageData(r *http.Request) map[string]any {
+	data := map[string]any{"Session": false, "CSRF": "", "Title": ""}
+	if sess, ok := sessionFromContext(r.Context()); ok {
+		data["Session"] = true
+		data["CSRF"] = sess.CSRFToken
+	}
+	return data
+}
+
+// setSessionCookie writes the session cookie. It has no Expires or Max-Age on
+// purpose: the session ends with the browser (U-5).
+func (s *Server) setSessionCookie(w http.ResponseWriter, token string) {
+	// #nosec G124 -- Secure is configuration-driven; HttpOnly and SameSite are always set.
+	http.SetCookie(w, &http.Cookie{
+		Name:     auth.CookieName,
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   s.secureCookie,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func (s *Server) clearSessionCookie(w http.ResponseWriter) {
+	// #nosec G124 -- Secure is configuration-driven; HttpOnly and SameSite are always set.
+	http.SetCookie(w, &http.Cookie{
+		Name:     auth.CookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   s.secureCookie,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+}
+
+// rawToken returns the session token from the request cookie.
+func rawToken(r *http.Request) string {
+	cookie, err := r.Cookie(auth.CookieName)
+	if err != nil {
+		return ""
+	}
+	return cookie.Value
+}
+
+// parseForm reads a form with a small body cap. It writes a 400 response and
+// reports false on failure.
+func (s *Server) parseForm(w http.ResponseWriter, r *http.Request) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, maxFormBytes)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "form too large or malformed", http.StatusBadRequest)
+		return false
+	}
+	return true
+}
+
+// checkCSRF validates the form token against the session and writes 403 on
+// failure.
+func (s *Server) checkCSRF(w http.ResponseWriter, r *http.Request, sess auth.Session) bool {
+	if !auth.ValidateCSRF(sess, r.PostFormValue("csrf")) {
+		http.Error(w, "invalid form token", http.StatusForbidden)
+		return false
+	}
+	return true
+}
+
+// sameOriginOnly rejects state-changing requests coming from another origin.
+// It complements the per-form CSRF token.
+func sameOriginOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet, http.MethodHead, http.MethodOptions:
+			next.ServeHTTP(w, r)
+			return
+		}
+		if origin := r.Header.Get("Origin"); origin != "" {
+			u, err := url.Parse(origin)
+			if err != nil || !strings.EqualFold(u.Host, r.Host) {
+				http.Error(w, "cross-origin request rejected", http.StatusForbidden)
+				return
+			}
+		}
+		if site := r.Header.Get("Sec-Fetch-Site"); site != "" &&
+			site != "same-origin" && site != "none" {
+			http.Error(w, "cross-site request rejected", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // securityHeaders applies the response headers required by AGENTS.md
@@ -119,3 +351,8 @@ func (r *statusRecorder) Write(b []byte) (int, error) {
 func (r *statusRecorder) Unwrap() http.ResponseWriter {
 	return r.ResponseWriter
 }
+
+// assets holds templates and vendored static files.
+//
+//go:embed templates/*.html static/*
+var assets embed.FS

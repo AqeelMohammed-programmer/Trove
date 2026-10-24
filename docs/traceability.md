@@ -138,17 +138,17 @@ a milestone complete while one of its rules is still a gap.
 
 | Rule | Test(s) | Status |
 |---|---|---|
-| U-1 | — | gap (M1) |
-| U-2 | — | gap (M1) |
-| U-3 | — | gap (M1) |
-| U-4 | — | gap (M1) |
-| U-5 | — | gap (M1) |
-| U-6 | — | gap (M1) |
-| U-7 | — | gap (M1) |
-| U-8 | — | gap (M1) |
-| U-9 | — | gap (M1) |
-| U-10 | — | gap (M1) |
-| U-11 | — | gap (deployment, out of scope) |
+| U-1 | `TestSetupFlow_U1_U2_U5`, `TestService_SetupAndLogin_U1_U4` | covered |
+| U-2 | `TestValidateNewPassword_U2`, `TestSetupFlow_U1_U2_U5` | covered |
+| U-3 | `TestUnauthenticatedRoutesRejected_U3` (enumerates every registered route) | covered |
+| U-4 | `TestService_SetupAndLogin_U1_U4`, `TestLoginFlow_U4` | covered |
+| U-5 | `TestSetupFlow_U1_U2_U5` (cookie has no Expires/Max-Age, HttpOnly, SameSite=Lax) | covered |
+| U-6 | `TestService_Logout_U6`, `TestLogout_U6` | covered |
+| U-7 | `TestService_ChangePassword_U7`, `TestChangePassword_U7` | covered |
+| U-8 | `TestHashPassword_RoundTrip_U8`, `TestHashPassword_SaltsDiffer`, `TestVerify_RejectsMalformedHashes` | covered |
+| U-9 | `TestService_LoginRejectsWrongPassword_U9`, `TestLoginThrottle_U9`, `TestThrottlePolicy_BlockDoubling_U9`, `TestThrottler_SuccessResets_U9` | covered |
+| U-10 | `TestService_ResetPassword_U10`, `TestPerformReset_U10`, `TestPerformReset_RejectsMismatch_U10` | covered |
+| U-11 | — | out of scope (deployment, spec section 1.3) |
 
 ## Export and import (`E-*`)
 
@@ -183,4 +183,5 @@ These tests protect the foundations the spec rules depend on.
 | File safety | `TestOpen_CreatesPrivateFile`, `TestOpen_PathWithSpaces` | The database file is `0600`; unusual paths work. |
 | Migrations | `TestMigrator_AppliesInOrderAndIsIdempotent`, `TestMigrator_RollsBackFailedMigration`, `TestMigrator_RejectsMalformedNames` | Ordered, transactional, idempotent, strict naming. |
 | FTS5 | `TestFTS5_AvailableAndUsable` | The driver supports FTS5, prefix matching, case folding and bm25 ranking (see ADR 0002). |
+| Authentication | `TestSetupFlow_*`, `TestLoginFlow_*`, `TestLoginThrottle_U9`, `TestChangePassword_U7`, `TestLogout_U6` | First-run setup, sessions, cookie attributes, throttling, password change and logout work end to end against a real database. |
 | HTTP surface | `TestHealthz_ReturnsOK`, `TestHealthz_OnlyAllowsGET`, `TestUnknownRoute_NotFound`, `TestHealthz_RevealsNoData`, `TestSecurityHeaders_AppliedToEveryResponse` | `/healthz` is minimal and read-only, and security headers are on every response. |

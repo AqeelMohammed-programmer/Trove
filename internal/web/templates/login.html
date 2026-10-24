@@ -1,0 +1,11 @@
+{{define "content"}}
+<h1>Log in</h1>
+<form method="post" action="/login" class="form">
+  <div class="field">
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password"
+           required autofocus>
+  </div>
+  <button type="submit" class="primary">Log in</button>
+</form>
+{{end}}

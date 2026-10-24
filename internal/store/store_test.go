@@ -13,16 +13,16 @@ import (
 func openTestDB(t *testing.T) *sql.DB {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "test.sqlite")
-	db, err := Open(context.Background(), path)
+	st, err := Open(context.Background(), path)
 	if err != nil {
 		t.Fatalf("Open(%q): %v", path, err)
 	}
 	t.Cleanup(func() {
-		if err := db.Close(); err != nil {
+		if err := st.Close(); err != nil {
 			t.Errorf("closing test database: %v", err)
 		}
 	})
-	return db
+	return st.DB()
 }
 
 func TestOpen_AppliesPragmas(t *testing.T) {
@@ -64,11 +64,11 @@ func TestOpen_CreatesPrivateFile(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
 	}
-	db, err := Open(context.Background(), path)
+	st, err := Open(context.Background(), path)
 	if err != nil {
 		t.Fatalf("Open(): %v", err)
 	}
-	t.Cleanup(func() { _ = db.Close() })
+	t.Cleanup(func() { _ = st.Close() })
 
 	info, err := os.Stat(path)
 	if err != nil {
@@ -86,13 +86,13 @@ func TestOpen_PathWithSpaces(t *testing.T) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatalf("MkdirAll: %v", err)
 	}
-	db, err := Open(context.Background(), filepath.Join(dir, "test.sqlite"))
+	st, err := Open(context.Background(), filepath.Join(dir, "test.sqlite"))
 	if err != nil {
 		t.Fatalf("Open(): %v", err)
 	}
-	t.Cleanup(func() { _ = db.Close() })
+	t.Cleanup(func() { _ = st.Close() })
 
-	if _, err := db.Exec(`CREATE TABLE widgets (id INTEGER PRIMARY KEY) STRICT`); err != nil {
+	if _, err := st.DB().Exec(`CREATE TABLE widgets (id INTEGER PRIMARY KEY) STRICT`); err != nil {
 		t.Fatalf("creating table: %v", err)
 	}
 }

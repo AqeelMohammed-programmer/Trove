@@ -1,5 +1,6 @@
 // Package store owns the SQLite database: connection setup, the pragmas the
-// project relies on, and the forward-only migration runner.
+// project relies on, the forward-only migration runner, and the SQL for every
+// entity.
 package store
 
 import (
@@ -15,17 +16,24 @@ import (
 	_ "modernc.org/sqlite" // registers the pure-Go "sqlite" driver
 )
 
+// ErrNotFound is returned when a requested row does not exist.
+var ErrNotFound = errors.New("store: not found")
+
 // busyTimeoutMillis is how long SQLite waits for a lock before returning
 // SQLITE_BUSY. One user means contention is rare; this only smooths bursts.
 const busyTimeoutMillis = 5000
 
+// Store is the application's database handle. All persistence goes through it.
+type Store struct {
+	db *sql.DB
+}
+
 // Open opens (creating if needed) the SQLite database at path and verifies
 // that it is reachable. The file is created with mode 0600 (data directory
-// permissions are the caller's responsibility). The returned *sql.DB is safe
-// for concurrent use; its pool is capped at one connection on purpose:
-// SQLite serializes writes anyway, and a single connection removes lock
-// contention inside the process.
-func Open(ctx context.Context, path string) (*sql.DB, error) {
+// permissions are the caller's responsibility). The pool is capped at one
+// connection on purpose: SQLite serializes writes anyway, and a single
+// connection removes lock contention inside the process.
+func Open(ctx context.Context, path string) (*Store, error) {
 	if strings.TrimSpace(path) == "" {
 		return nil, errors.New("store: empty database path")
 	}
@@ -58,7 +66,18 @@ func Open(ctx context.Context, path string) (*sql.DB, error) {
 		}
 		return nil, fmt.Errorf("pinging database: %w", pingErr)
 	}
-	return db, nil
+	return &Store{db: db}, nil
+}
+
+// DB exposes the underlying handle for wiring (migrations and tests). Feature
+// code should use the Store methods instead.
+func (s *Store) DB() *sql.DB {
+	return s.db
+}
+
+// Close closes the database.
+func (s *Store) Close() error {
+	return s.db.Close()
 }
 
 // dsn builds a SQLite connection string that applies the project's pragmas

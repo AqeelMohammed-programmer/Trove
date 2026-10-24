@@ -1,0 +1,30 @@
+{{define "layout"}}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}} — {{.App}}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="/">{{.App}}</a>
+    {{if .Session}}
+    <nav aria-label="Account">
+      <a href="/change-password">Change password</a>
+      <form method="post" action="/logout" class="inline-form">
+        <input type="hidden" name="csrf" value="{{.CSRF}}">
+        <button type="submit" class="link-button">Log out</button>
+      </form>
+    </nav>
+    {{end}}
+  </header>
+
+  <main id="main" class="page">
+    {{if .Error}}<p class="alert alert-error" role="alert">{{.Error}}</p>{{end}}
+    {{if .Notice}}<p class="alert alert-notice">{{.Notice}}</p>{{end}}
+    {{template "content" .}}
+  </main>
+</body>
+</html>{{end}}

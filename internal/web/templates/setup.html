@@ -1,0 +1,20 @@
+{{define "content"}}
+<h1>Set up {{.App}}</h1>
+<p>Choose the one password that protects this repository. There is no user
+name and no password recovery inside the application.</p>
+
+<form method="post" action="/setup" class="form">
+  <div class="field">
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="new-password"
+           minlength="8" required autofocus>
+    <p class="hint">At least 8 characters.</p>
+  </div>
+  <div class="field">
+    <label for="confirm">Confirm password</label>
+    <input id="confirm" name="confirm" type="password" autocomplete="new-password"
+           minlength="8" required>
+  </div>
+  <button type="submit" class="primary">Set password</button>
+</form>
+{{end}}

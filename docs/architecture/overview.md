@@ -51,11 +51,11 @@ Dependency rules (`AGENTS.md` section 4.2):
 | `internal/app` | Product name and build information. | Implemented. |
 | `internal/config` | Flags and environment variables, validated at startup. | Implemented. |
 | `internal/store` | SQLite connection, pragmas, migration runner. | Implemented; domain tables arrive in M1/M2. |
-| `internal/web` | HTTP routes, middleware, security headers. | `/healthz` only; UI arrives in M2. |
+| `internal/web` | HTTP routes, middleware, templates, security headers. | Auth screens and `/healthz`; item UI arrives in M2. |
 | `internal/domain` | Entities and invariants. | Not created yet. |
 | `internal/service` | Use cases implementing spec rules. | Not created yet. |
 | `internal/blob` | Streaming, hashing and atomic storage of copied files. | Not created yet (M3). |
-| `internal/auth` | Argon2id, sessions, login throttling. | Not created yet (M1). |
+| `internal/auth` | Argon2id, sessions, login throttling. | Implemented. |
 | `internal/exchange` | ZIP export and restore-only import. | Not created yet (M8). |
 
 Empty packages are deliberately not created ahead of time: a milestone creates

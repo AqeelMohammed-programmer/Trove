@@ -98,17 +98,16 @@ with your service manager (`journalctl -u trove`, for example).
 ## Password reset
 
 The application has no in-app password recovery (`U-10`). The reset is a
-subcommand of the same binary, run on the machine that hosts Trove, planned for
-M1:
+subcommand of the same binary, run on the machine that hosts Trove:
 
 ```sh
 ./bin/trove reset-password
 ```
 
-It will prompt for the new password on the terminal, update the hash, end all
-sessions and touch no other data. It is never reachable over HTTP.
-
-Until M1 exists, there is no password and no reset.
+It prompts twice on the terminal without echoing, updates the hash, ends all
+sessions and touches no other data. It never accepts the password as an
+argument, so it cannot leak through a process list. It is never reachable over
+HTTP.
 
 ## Health check
 

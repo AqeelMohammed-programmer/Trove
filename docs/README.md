@@ -59,7 +59,7 @@ rule it covers has a test and its pages are updated.
 | # | Milestone | Status |
 |---|---|---|
 | M0 | Skeleton: repo, make targets, config, migrations, health, FTS5 proof, ADRs, docs | done |
-| M1 | Authentication | not started |
+| M1 | Authentication | done |
 | M2 | Items and tags | not started |
 | M3 | Attachments | not started |
 | M4 | Search | not started |

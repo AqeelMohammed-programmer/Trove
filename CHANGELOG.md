@@ -27,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ADRs 0001–0005: Go, SQLite/FTS5, server-rendered HTML with HTMX, password
   reset as a CLI subcommand, and the export/import archive.
 
+### Added
+
+- Authentication (M1): first-run password setup, login, logout, change
+  password, Argon2id hashing with stored parameters, server-side sessions
+  (hashed tokens, `HttpOnly`, `SameSite=Lax`, browser-session cookie), CSRF
+  tokens plus Origin checks, login throttling, and `reset-password` as a local
+  CLI subcommand.
+- Authentication tests, including a route-enumeration test proving every
+  non-public route rejects unauthenticated requests, and a real-SQLite
+  integration suite for setup, login, throttling, logout and password change.
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

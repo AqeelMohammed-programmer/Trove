@@ -39,20 +39,21 @@ switch for HTTPS deployments.
 | Minimal unauthenticated surface | `internal/web/server.go` | Only `GET /healthz`, which returns `ok` and no data. |
 | Private data files | `internal/store/store.go` | Database created with `0600`; data directory created with `0700`. |
 | No outbound network calls | whole binary | No HTTP client exists in the application; dependencies are vendored or compiled in. |
-| No secrets in logs | `cmd/server` | The configuration contains no secrets; password values are never logged (M1 will extend this). |
+| No secrets in logs | `cmd/server` | The configuration contains no secrets; password values, hashes and session tokens are never logged. |
 | Pure-Go SQLite | `internal/store` | No CGO, no shelling out to a `sqlite3` binary. |
+| First-run setup, login, logout, change password | `internal/auth`, `internal/web/auth.go` | `U-1`, `U-2`, `U-4`, `U-6`, `U-7`. |
+| Argon2id, per-hash salt and parameters, constant-time comparison | `internal/auth/password.go` | `U-8`. |
+| Server-side sessions; only the token hash is stored; `HttpOnly`, `SameSite=Lax`, browser-session cookie | `internal/auth/session.go`, `internal/store/auth.go` | `U-3`, `U-5`. |
+| Login throttling: 5 failures, 60 s block, doubling to 15 min, persisted per client | `internal/auth/throttle.go` | `U-9`. |
+| Session rotation on login and password change; every session ends on reset | `internal/auth/service.go` | `U-4`, `U-7`, `U-10`. |
+| CSRF: per-session form token plus Origin / Sec-Fetch-Site checks | `internal/web/server.go`, `internal/web/auth.go` | AGENTS.md section 7. |
+| Route-protection test enumerating every registered route | `internal/web/server_test.go` | `U-3`. |
+| Local-only password reset subcommand with hidden input | `cmd/server` | `U-10`. |
 
 ### Planned
 
 | Control | Milestone | Rules |
 |---|---|---|
-| First-run setup, login, logout, change password | M1 | `U-1`, `U-2`, `U-4`, `U-6`, `U-7` |
-| Argon2id with stored parameters, constant-time comparison | M1 | `U-8` |
-| Server-side sessions; `HttpOnly`, `SameSite=Lax`, no expiry cookie | M1 | `U-3`, `U-5` |
-| Login throttling: 5 failures, 60 s block, doubling to 15 min | M1 | `U-9` |
-| Session regeneration on login; end all sessions on password change and reset | M1 | `U-4`, `U-7`, `U-10` |
-| CSRF protection on every state-changing request | M1 | AGENTS.md section 7 |
-| Route-protection test enumerating every registered route | M1 | `U-3` |
 | Markdown rendering with raw HTML disabled, then sanitizing | M2 | `V-1`–`V-4` |
 | Output auto-escaping in all templates; no trusted user HTML | M2 | AGENTS.md section 7 |
 | Request body caps for ordinary forms; streaming with no cap for uploads | M2/M3 | `N-1`, AGENTS.md section 7 |
