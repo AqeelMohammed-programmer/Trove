@@ -33,6 +33,7 @@ Then pick the page for your task.
 - [`architecture/storage.md`](architecture/storage.md) — on-disk layout and file safety.
 - [`architecture/search.md`](architecture/search.md) — FTS5 usage and query building.
 - [`architecture/security.md`](architecture/security.md) — threats and controls.
+- [`architecture/ui.md`](architecture/ui.md) — colours, type, spacing and the theme preference.
 - [`architecture/performance.md`](architecture/performance.md) — targets and measurements.
 
 ### Guides

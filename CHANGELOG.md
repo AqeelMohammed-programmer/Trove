@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Redesigned the interface around a role-based design system: neutral paper,
+  one accent (teal) used only for links and the primary action, a fixed type
+  and spacing scale, serif headings and note prose, hairline separators instead
+  of boxes, and inline SVG icons instead of emoji. All colour pairs are
+  verified against WCAG 2.2 AA and the choices are recorded in
+  [`docs/architecture/ui.md`](docs/architecture/ui.md).
+
+### Added
+
+- A light/dark/system theme switch in the top bar, remembered in the browser.
+  It is a UI preference outside the specification; `theme.js` applies it before
+  paint to avoid a flash, and both scripts stay external to respect the CSP.
+
 ## [1.0.0] - 2026-10-24
 
 ### Added

@@ -379,3 +379,32 @@ func TestStaticAssetServed(t *testing.T) {
 		t.Error("stylesheet is empty")
 	}
 }
+
+func TestThemeScriptServed(t *testing.T) {
+	t.Parallel()
+
+	srv, _ := newTestServer(t)
+	rec := request(t, srv.Handler(), http.MethodGet, "/static/theme.js", nil, nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /static/theme.js = %d, want 200", rec.Code)
+	}
+	if rec.Body.Len() == 0 {
+		t.Error("theme script is empty")
+	}
+}
+
+func TestLayout_IncludesThemeToggle(t *testing.T) {
+	t.Parallel()
+
+	srv, _ := newTestServer(t)
+	h := srv.Handler()
+
+	// The toggle must be present before login (on the setup screen) so the
+	// preference can be set on the auth pages too.
+	body := request(t, h, http.MethodGet, "/setup", nil, nil).Body.String()
+	for _, want := range []string{"theme-switch", `data-theme-set="system"`, `data-theme-set="light"`, `data-theme-set="dark"`, "/static/theme.js"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("login page is missing %q", want)
+		}
+	}
+}
