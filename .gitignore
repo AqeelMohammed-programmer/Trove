@@ -1,0 +1,24 @@
+# Build output
+/bin/
+/dist/
+/trove
+/cmd/server/server
+
+# Local tools installed by `make tools`
+/.tools/
+
+# Data written by `make run` and by local instances
+/data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Test and coverage output
+*.out
+coverage.html
+
+# Editor and OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
