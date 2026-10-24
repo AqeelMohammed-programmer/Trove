@@ -1,0 +1,65 @@
+{{define "content"}}
+<div class="page-head">
+  <h1>{{.Title}}</h1>
+  <p class="result-count">{{if .Empty}}No items{{else}}{{.Total}} {{if eq .Total 1}}item{{else}}items{{end}}{{end}}</p>
+</div>
+
+<form method="get" action="/" class="filters" aria-label="Filters and sorting">
+  {{range .SelectedTags}}<input type="hidden" name="tag" value="{{.Name}}">{{end}}
+  <div class="filter-group">
+    <label class="check"><input type="checkbox" name="favorites" value="1" {{if .FavoritesOnly}}checked{{end}}> Favorites only</label>
+    <label class="check"><input type="checkbox" name="link" value="1" {{if .HasLink}}checked{{end}}> Has a link</label>
+    <label class="check"><input type="checkbox" name="file" value="1" {{if .HasFile}}checked{{end}}> Has a file</label>
+  </div>
+  <div class="filter-group">
+    <label for="sort">Sort</label>
+    <select id="sort" name="sort">
+      {{range .SortOptions}}<option value="{{.Value}}" {{if .Selected}}selected{{end}}>{{.Label}}</option>{{end}}
+    </select>
+    <button type="submit" class="secondary">Apply</button>
+    <a class="clear" href="{{.ClearURL}}">Clear</a>
+  </div>
+</form>
+
+{{if .SelectedTags}}
+<div class="active-filters" aria-label="Active tag filters">
+  <span class="filter-label">Tags:</span>
+  {{range .SelectedTags}}
+  <a class="chip chip-removable" href="{{.URL}}" aria-label="Remove tag {{.Name}}">{{.Name}} <span aria-hidden="true">×</span></a>
+  {{end}}
+</div>
+{{end}}
+
+{{if .Empty}}
+<div class="empty-state">
+  <p>Nothing here yet.</p>
+  <p><a href="/items/new">Add your first item</a> or <a href="/">clear the filters</a>.</p>
+</div>
+{{else}}
+<ol class="item-list">
+  {{range .Rows}}
+  <li class="item-row">
+    <div class="item-row-main">
+      <h2><a href="/items/{{.ID}}">{{.Title}}</a></h2>
+      {{if .Snippet}}<p class="snippet">{{.Snippet}}</p>{{end}}
+      {{template "item-tags" .Tags}}
+    </div>
+    <div class="item-row-meta">
+      {{template "favorite-form" .Favorite}}
+      <span class="attachment-counts">
+        <span class="count"><span class="icon" aria-hidden="true">🔗</span><span class="visually-hidden">links:</span> {{.Links}}</span>
+        <span class="count"><span class="icon" aria-hidden="true">📄</span><span class="visually-hidden">files:</span> {{.Files}}</span>
+      </span>
+      <time datetime="{{.UpdatedISO}}" class="updated">{{.Updated}}</time>
+    </div>
+  </li>
+  {{end}}
+</ol>
+
+<nav class="pager" aria-label="Pages">
+  <span class="range">Showing {{.Page.From}}–{{.Page.To}} of {{.Page.Total}}</span>
+  {{if .Page.HasPrev}}<a class="secondary as-button" href="{{.Page.PrevURL}}" rel="prev">Previous</a>{{end}}
+  {{if .Page.HasNext}}<a class="secondary as-button" href="{{.Page.NextURL}}" rel="next">Next</a>{{end}}
+</nav>
+{{end}}
+{{end}}

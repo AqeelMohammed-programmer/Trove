@@ -16,6 +16,7 @@ import (
 
 	"Trove/internal/app"
 	"Trove/internal/auth"
+	"Trove/internal/service"
 )
 
 // contentSecurityPolicy forbids anything that is not served by this
@@ -34,6 +35,8 @@ type Options struct {
 	Logger *slog.Logger
 	// Auth is the authentication service. Required.
 	Auth *auth.Service
+	// Items is the item and tag service. Required.
+	Items *service.ItemService
 	// SecureCookie marks the session cookie Secure (HTTPS deployments).
 	SecureCookie bool
 }
@@ -42,6 +45,8 @@ type Options struct {
 type Server struct {
 	logger       *slog.Logger
 	auth         *auth.Service
+	items        *service.ItemService
+	markdown     *Markdown
 	secureCookie bool
 	mux          *http.ServeMux
 	templates    map[string]*template.Template
@@ -66,9 +71,14 @@ func New(opts Options) *Server {
 	if opts.Auth == nil {
 		panic("web: Options.Auth is required")
 	}
+	if opts.Items == nil {
+		panic("web: Options.Items is required")
+	}
 	s := &Server{
 		logger:       logger,
 		auth:         opts.Auth,
+		items:        opts.Items,
+		markdown:     NewMarkdown(),
 		secureCookie: opts.SecureCookie,
 		mux:          http.NewServeMux(),
 		templates:    mustParseTemplates(),
@@ -97,7 +107,13 @@ func (s *Server) routes() {
 	s.handle("GET", "/login", "/login", true, s.handleLoginPage)
 	s.handle("POST", "/login", "/login", true, s.handleLogin)
 
-	s.handle("GET", "/", "/", false, s.authenticated(s.handleHome))
+	s.handle("GET", "/", "/", false, s.authenticated(s.handleList))
+	s.handle("GET", "/items/new", "/items/new", false, s.authenticated(s.handleNewItem))
+	s.handle("POST", "/items", "/items", false, s.authenticated(s.handleCreateItem))
+	s.handle("GET", "/items/{id}", "/items/example", false, s.authenticated(s.handleShowItem))
+	s.handle("GET", "/items/{id}/edit", "/items/example/edit", false, s.authenticated(s.handleEditItem))
+	s.handle("POST", "/items/{id}", "/items/example", false, s.authenticated(s.handleUpdateItem))
+	s.handle("POST", "/items/{id}/favorite", "/items/example/favorite", false, s.authenticated(s.handleFavorite))
 	s.handle("POST", "/logout", "/logout", false, s.authenticated(s.handleLogout))
 	s.handle("GET", "/change-password", "/change-password", false, s.authenticated(s.handleChangePasswordPage))
 	s.handle("POST", "/change-password", "/change-password", false, s.authenticated(s.handleChangePassword))
@@ -160,13 +176,32 @@ func (s *Server) render(w http.ResponseWriter, status int, page string, data map
 	}
 }
 
-// mustParseTemplates parses every page together with the layout. A failure is
-// a programming error found at startup, not in a request.
+// renderFragment executes a named template without the layout. It is used for
+// HTMX responses such as the favorite button.
+func (s *Server) renderFragment(w http.ResponseWriter, name string, data any) {
+	t, ok := s.templates["list"]
+	if !ok {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	if err := t.ExecuteTemplate(w, name, data); err != nil {
+		s.logger.Error("rendering fragment", "template", name, "error", err)
+	}
+}
+
+// mustParseTemplates parses every page together with the layout and shared
+// partials. A failure is a programming error found at startup, not in a
+// request.
 func mustParseTemplates() map[string]*template.Template {
-	pages := []string{"home", "login", "setup", "change-password"}
+	pages := []string{"list", "item", "item-form", "login", "setup", "change-password"}
 	out := make(map[string]*template.Template, len(pages))
 	for _, page := range pages {
-		t, err := template.ParseFS(assets, "templates/layout.html", "templates/"+page+".html")
+		t, err := template.ParseFS(assets,
+			"templates/layout.html",
+			"templates/partials.html",
+			"templates/"+page+".html")
 		if err != nil {
 			panic("web: parsing template " + page + ": " + err.Error())
 		}
@@ -185,6 +220,9 @@ func (s *Server) authenticated(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
+		// Authenticated pages contain private data and must not sit in a
+		// shared cache.
+		w.Header().Set("Cache-Control", "no-store")
 		next(w, r.WithContext(context.WithValue(r.Context(), sessionContextKey{}, sess)))
 	}
 }
@@ -208,7 +246,7 @@ func sessionFromContext(ctx context.Context) (auth.Session, bool) {
 
 // pageData seeds template data with the session and CSRF token when present.
 func pageData(r *http.Request) map[string]any {
-	data := map[string]any{"Session": false, "CSRF": "", "Title": ""}
+	data := map[string]any{"Session": false, "CSRF": "", "Title": "", "Nav": ""}
 	if sess, ok := sessionFromContext(r.Context()); ok {
 		data["Session"] = true
 		data["CSRF"] = sess.CSRFToken

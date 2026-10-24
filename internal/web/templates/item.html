@@ -1,0 +1,54 @@
+{{define "content"}}
+<p class="back"><a href="/">← All items</a></p>
+
+<article class="item-detail">
+  <header class="item-head">
+    <div>
+      <h1>{{.Item.Title}}</h1>
+      {{if .Trashed}}<p class="alert alert-notice">This item is in the trash.</p>{{end}}
+    </div>
+    {{template "favorite-form" .Favorite}}
+  </header>
+
+  {{if .Item.Description}}<p class="description">{{.Item.Description}}</p>{{end}}
+
+  {{template "item-tags" .Tags}}
+
+  <p class="dates">
+    Created <time datetime="{{.Item.CreatedAt.Format "2006-01-02T15:04:05Z07:00"}}">{{.Created}}</time>
+    · Edited <time datetime="{{.Item.UpdatedAt.Format "2006-01-02T15:04:05Z07:00"}}">{{.Updated}}</time>
+  </p>
+
+  {{if .Item.Note}}
+  <div class="note markdown">
+    {{.NoteHTML}}
+  </div>
+  {{end}}
+
+  <section class="attachments" aria-labelledby="attachments-heading">
+    <h2 id="attachments-heading">Attachments</h2>
+    {{if .Item.Attachments}}
+    <ul class="attachment-list">
+      {{range .Item.Attachments}}
+      <li>
+        <span class="kind">{{if eq .Kind "link"}}Link{{else}}File{{end}}</span>
+        {{if eq .Kind "link"}}
+        <a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{if .Label}}{{.Label}}{{else}}{{.URL}}{{end}}</a>
+        <span class="attachment-url">{{.URL}}</span>
+        {{else}}
+        <span class="attachment-name">{{if .Label}}{{.Label}}{{else}}{{.FileName}}{{end}}</span>
+        <span class="attachment-size">{{.SizeBytes}} bytes</span>
+        {{end}}
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="empty-small">No attachments.</p>
+    {{end}}
+  </section>
+
+  <p class="actions">
+    <a class="primary as-button" href="/items/{{.Item.ID}}/edit">Edit item</a>
+  </p>
+</article>
+{{end}}

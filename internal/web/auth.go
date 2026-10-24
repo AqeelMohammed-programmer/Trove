@@ -107,16 +107,6 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// handleHome is the placeholder start page until items arrive in M2.
-func (s *Server) handleHome(w http.ResponseWriter, r *http.Request) {
-	data := pageData(r)
-	data["Title"] = "Home"
-	if r.URL.Query().Get("changed") == "1" {
-		data["Notice"] = "Password changed. Other sessions were signed out."
-	}
-	s.render(w, http.StatusOK, "home", data)
-}
-
 // handleLogout ends the session and clears the cookie (U-6).
 func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	sess, ok := sessionFromContext(r.Context())

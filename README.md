@@ -11,16 +11,21 @@ guide is [`AGENTS.md`](AGENTS.md).
 
 ## Status
 
-Milestone **M0 (skeleton)** is complete. What works today:
+Milestones **M0–M2** are complete. What works today:
 
-- One Go binary that loads configuration, opens SQLite, applies migrations
-  and serves `GET /healthz`.
-- Strict security headers on every response.
-- A migration runner, proven with tests.
-- An FTS5 proof test for the chosen pure-Go SQLite driver.
+- One Go binary that loads configuration, opens SQLite, applies migrations and
+  serves both the UI and `GET /healthz`.
+- Single-password authentication: first-run setup, login, logout and change
+  password, with Argon2id hashing, server-side sessions, login throttling and a
+  local-only `reset-password` subcommand.
+- Items and tags: add and edit one form, Markdown notes rendered safely, tag
+  autocomplete and reuse, favorites, sorting, filters, tag chips and paged
+  listing.
+- Strict security headers, CSRF protection and a strict Content-Security-Policy
+  on every response.
 
-There is no user interface yet: authentication arrives in M1, items in M2.
-See the [milestone table](docs/README.md#milestones) for the full order.
+Attachments arrive in M3, search in M4 and the rest in later milestones. See the
+[milestone table](docs/README.md#milestones) for the full order.
 
 ## Quick start
 

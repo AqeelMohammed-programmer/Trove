@@ -38,6 +38,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   non-public route rejects unauthenticated requests, and a real-SQLite
   integration suite for setup, login, throttling, logout and password change.
 
+### Added
+
+- Items and tags (M2): a single add/edit form (`I-1`, `I-6`), title defaulting
+  to the first attachment (`I-2`), tag parsing, case-insensitive reuse and
+  automatic removal of unused tags (`T-1`–`T-6`), favorites (`F-1`–`F-3`),
+  browsing with sort orders, filters, tag chips and pagination (`B-1`–`B-7`),
+  and an item detail view.
+- Markdown notes rendered with goldmark and sanitized with bluemonday: raw HTML
+  is never rendered (`V-2`), image syntax becomes a link (`V-3`), and links open
+  in a new tab (`V-4`).
+- Vendored HTMX 2.0.4 (MIT) for partial updates, configured for the strict
+  Content-Security-Policy; every action still works without JavaScript.
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

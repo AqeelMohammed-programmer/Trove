@@ -18,6 +18,9 @@ use **HTMX** for partial updates. HTMX is **vendored** into the repository
 (pinned version, license recorded when added) and served from the application's
 own origin.
 
+The pinned asset is `internal/web/static/htmx.min.js`, **HTMX 2.0.4**, MIT
+licensed. Upgrading it is a manual step that records the new version here.
+
 - Every action is a normal link or form submission first; HTMX only avoids a
   full page reload.
 - Filter and sort state lives in the URL so views are bookmarkable and the

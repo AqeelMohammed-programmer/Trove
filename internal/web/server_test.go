@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"Trove/internal/auth"
+	"Trove/internal/service"
 	"Trove/internal/store"
 	"Trove/migrations"
 )
@@ -43,7 +44,12 @@ func newTestServer(t *testing.T) (*Server, *auth.Service) {
 		Throttle: auth.NewThrottler(st, auth.DefaultThrottlePolicy, time.Now),
 	})
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	return New(Options{Logger: logger, Auth: svc}), svc
+	srv := New(Options{
+		Logger: logger,
+		Auth:   svc,
+		Items:  service.NewItemService(st, time.Now),
+	})
+	return srv, svc
 }
 
 // request performs a request with an optional session cookie and form values.

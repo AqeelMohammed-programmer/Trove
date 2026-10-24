@@ -50,6 +50,7 @@ Then pick the page for your task.
 - [`decisions/0003-server-rendered-html-with-htmx.md`](decisions/0003-server-rendered-html-with-htmx.md) — pages and interactivity.
 - [`decisions/0004-password-reset-as-cli-command.md`](decisions/0004-password-reset-as-cli-command.md) — reset without HTTP.
 - [`decisions/0005-export-import-archive.md`](decisions/0005-export-import-archive.md) — the ZIP archive format.
+- [`decisions/0006-markdown-and-sanitizing.md`](decisions/0006-markdown-and-sanitizing.md) — goldmark plus bluemonday for safe notes.
 
 ## Milestones
 
@@ -60,7 +61,7 @@ rule it covers has a test and its pages are updated.
 |---|---|---|
 | M0 | Skeleton: repo, make targets, config, migrations, health, FTS5 proof, ADRs, docs | done |
 | M1 | Authentication | done |
-| M2 | Items and tags | not started |
+| M2 | Items and tags | done |
 | M3 | Attachments | not started |
 | M4 | Search | not started |
 | M5 | Trash | not started |

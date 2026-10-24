@@ -55,8 +55,9 @@ Expected: `200 OK`, body `ok`, and the security headers described in
 
 Stop it with `Ctrl+C`; the server shuts down gracefully.
 
-Open <http://127.0.0.1:8080/> and complete first-run password setup. The item
-collection arrives with M2; see the [milestone table](../README.md#milestones).
+Open <http://127.0.0.1:8080/> and complete first-run password setup. You can
+then add items, tag them, mark favorites and browse or filter the list. See the
+[milestone table](../README.md#milestones) for what is still to come.
 
 ## 5. Build the binary
 

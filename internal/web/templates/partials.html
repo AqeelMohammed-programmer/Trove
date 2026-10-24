@@ -1,0 +1,20 @@
+{{define "favorite-form"}}
+<form method="post" action="/items/{{.ID}}/favorite" class="favorite-form"
+      hx-post="/items/{{.ID}}/favorite" hx-target="this" hx-swap="outerHTML">
+  <input type="hidden" name="csrf" value="{{.CSRF}}">
+  <input type="hidden" name="favorite" value="{{if .Favorite}}0{{else}}1{{end}}">
+  <input type="hidden" name="next" value="{{.Next}}">
+  <button type="submit" class="star{{if .Favorite}} is-favorite{{end}}"
+          aria-pressed="{{.Favorite}}"
+          aria-label="{{if .Favorite}}Remove from favorites{{else}}Add to favorites{{end}}"
+          title="{{if .Favorite}}Remove from favorites{{else}}Add to favorites{{end}}">
+    <span aria-hidden="true">{{if .Favorite}}★{{else}}☆{{end}}</span>
+  </button>
+</form>
+{{end}}
+
+{{define "item-tags"}}
+{{if .}}<ul class="chips">
+  {{range .}}<li><a class="chip" href="{{.URL}}">{{.Name}}</a></li>{{end}}
+</ul>{{end}}
+{{end}}

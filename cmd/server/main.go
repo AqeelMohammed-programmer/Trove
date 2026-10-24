@@ -20,6 +20,7 @@ import (
 	"Trove/internal/app"
 	"Trove/internal/auth"
 	"Trove/internal/config"
+	"Trove/internal/service"
 	"Trove/internal/store"
 	"Trove/internal/web"
 	"Trove/migrations"
@@ -71,8 +72,13 @@ func run(args []string, getenv func(string) string) error {
 	}()
 
 	srv := &http.Server{
-		Addr:    cfg.ListenAddr,
-		Handler: web.New(web.Options{Logger: logger, Auth: newAuthService(st), SecureCookie: cfg.SecureCookie}).Handler(),
+		Addr: cfg.ListenAddr,
+		Handler: web.New(web.Options{
+			Logger:       logger,
+			Auth:         newAuthService(st),
+			Items:        service.NewItemService(st, time.Now),
+			SecureCookie: cfg.SecureCookie,
+		}).Handler(),
 		// Uploads stream with no size cap (spec N-1), so there is deliberately
 		// no ReadTimeout or WriteTimeout. ReadHeaderTimeout still protects
 		// against slow-header clients.

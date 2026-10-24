@@ -49,18 +49,20 @@ switch for HTTPS deployments.
 | CSRF: per-session form token plus Origin / Sec-Fetch-Site checks | `internal/web/server.go`, `internal/web/auth.go` | AGENTS.md section 7. |
 | Route-protection test enumerating every registered route | `internal/web/server_test.go` | `U-3`. |
 | Local-only password reset subcommand with hidden input | `cmd/server` | `U-10`. |
+| Markdown notes rendered with raw HTML omitted, then sanitized; images reduced to links | `internal/web/markdown.go` | `V-1`–`V-4` |
+| Output auto-escaping in every template; only sanitized note HTML is marked trusted | `internal/web/templates`, `internal/web/markdown.go` | AGENTS.md section 7 |
+| Request body cap for ordinary forms | `internal/web/server.go` | AGENTS.md section 7 |
+| `Cache-Control: no-store` on authenticated pages | `internal/web/server.go` | Private data never lands in a shared cache. |
+| Link revalidation: only `http`/`https` links are accepted | `internal/domain/item.go` | `A-2` |
+| Vendored HTMX served from the app origin, configured with `allowEval:false` | `internal/web/static/htmx.min.js` | Keeps the strict CSP, no third-party origin (`I-8`). |
 
 ### Planned
 
 | Control | Milestone | Rules |
 |---|---|---|
-| Markdown rendering with raw HTML disabled, then sanitizing | M2 | `V-1`–`V-4` |
-| Output auto-escaping in all templates; no trusted user HTML | M2 | AGENTS.md section 7 |
-| Request body caps for ordinary forms; streaming with no cap for uploads | M2/M3 | `N-1`, AGENTS.md section 7 |
-| `Content-Disposition: attachment` downloads with encoded names | M3 | `A-7` |
-| Link rendering only for `http`/`https`, `rel="noopener noreferrer"` | M3 | `A-2` |
+| Streaming uploads with no size cap, plus `Content-Disposition: attachment` downloads with encoded names | M3 | `A-7`, `N-1` |
+| Link attachments rendered with `rel="noopener noreferrer"` and `target="_blank"` in the UI | M3 | `A-2` |
 | ZIP-slip protection and SHA-256 verification on import | M8 | `E-5`, `E-6`, `E-7` |
-| Password reset only as a local CLI subcommand, ending sessions | M1 | `U-10` |
 | Orphaned blob cleanup that stays inside the data directory | M5/M9 | `X-12` |
 
 ## Notes on specific decisions
