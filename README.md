@@ -21,10 +21,12 @@ Milestones **M0–M2** are complete. What works today:
 - Items and tags: add and edit one form, Markdown notes rendered safely, tag
   autocomplete and reuse, favorites, sorting, filters, tag chips and paged
   listing.
+- Attachments: link attachments and file uploads (streamed and hashed), with
+  open, copy and download actions.
 - Strict security headers, CSRF protection and a strict Content-Security-Policy
   on every response.
 
-Attachments arrive in M3, search in M4 and the rest in later milestones. See the
+Search arrives in M4 and the remaining features in later milestones. See the
 [milestone table](docs/README.md#milestones) for the full order.
 
 ## Quick start

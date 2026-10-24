@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"Trove/internal/auth"
+	"Trove/internal/blob"
 	"Trove/internal/service"
 	"Trove/internal/store"
 	"Trove/migrations"
@@ -43,11 +44,15 @@ func newTestServer(t *testing.T) (*Server, *auth.Service) {
 		Sessions: auth.NewSessionManager(st, time.Now),
 		Throttle: auth.NewThrottler(st, auth.DefaultThrottlePolicy, time.Now),
 	})
+	blobs, err := blob.New(filepath.Join(t.TempDir(), "files"))
+	if err != nil {
+		t.Fatalf("blob store: %v", err)
+	}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	srv := New(Options{
 		Logger: logger,
 		Auth:   svc,
-		Items:  service.NewItemService(st, time.Now),
+		Items:  service.NewItemService(st, blobs, time.Now),
 	})
 	return srv, svc
 }

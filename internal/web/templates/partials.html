@@ -18,3 +18,17 @@
   {{range .}}<li><a class="chip" href="{{.URL}}">{{.Name}}</a></li>{{end}}
 </ul>{{end}}
 {{end}}
+
+{{define "link-row"}}
+<div class="link-row">
+  <div class="field">
+    <label>Link URL</label>
+    <input type="url" name="link_url" placeholder="https://example.org" inputmode="url">
+  </div>
+  <div class="field">
+    <label>Label (optional)</label>
+    <input type="text" name="link_label" maxlength="100" placeholder="slides">
+  </div>
+</div>
+{{end}}
+

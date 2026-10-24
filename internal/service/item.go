@@ -18,29 +18,33 @@ const DefaultPageSize = 50
 // maxPageSize caps a user-supplied page size.
 const maxPageSize = 100
 
-// ItemStore is the persistence contract for items and tags.
+// ItemStore is the persistence contract for items, tags and attachments.
 type ItemStore interface {
-	CreateItem(ctx context.Context, item domain.Item, tagNames []string) (domain.Item, error)
-	UpdateItem(ctx context.Context, item domain.Item, tagNames []string) (domain.Item, error)
+	CreateItem(ctx context.Context, item domain.Item, tagNames []string, attachments []domain.Attachment) (domain.Item, error)
+	UpdateItem(ctx context.Context, item domain.Item, tagNames []string, newAttachments []domain.Attachment) (domain.Item, error)
 	GetItem(ctx context.Context, id string) (domain.Item, error)
 	ListItems(ctx context.Context, filter domain.ListFilter) (domain.ListResult, error)
 	SetFavorite(ctx context.Context, id string, favorite bool) error
 	ActiveTags(ctx context.Context) ([]domain.TagCount, error)
 	SuggestTags(ctx context.Context, prefix string, limit int) ([]string, error)
+	AttachmentByID(ctx context.Context, id string) (domain.Attachment, error)
+	ItemTrashed(ctx context.Context, itemID string) (bool, error)
 }
 
-// ItemService implements item and tag use cases.
+// ItemService implements item, tag and attachment use cases.
 type ItemService struct {
 	store ItemStore
+	blobs BlobStore
 	now   func() time.Time
 }
 
-// NewItemService wires the service. A nil now means time.Now.
-func NewItemService(store ItemStore, now func() time.Time) *ItemService {
+// NewItemService wires the service. blobs may be nil only in tests that never
+// handle files. A nil now means time.Now.
+func NewItemService(store ItemStore, blobs BlobStore, now func() time.Time) *ItemService {
 	if now == nil {
 		now = time.Now
 	}
-	return &ItemService{store: store, now: now}
+	return &ItemService{store: store, blobs: blobs, now: now}
 }
 
 // ItemInput is validated user input for creating or editing an item.
@@ -50,15 +54,27 @@ type ItemInput struct {
 	Note        string
 	Tags        []string
 	Favorite    bool
-	// Attachments is used by I-2 to derive an empty title. On edit, the
-	// service falls back to the item's existing active attachments when this
-	// is nil.
-	Attachments []domain.Attachment
+	// Links and Files are new attachments to add (A-1, A-5).
+	Links []LinkInput
+	Files []FileInput
+	// ExistingAttachments is the item's current active attachments. It is used
+	// on edit to derive a default title (I-2) and to know the attachment order.
+	ExistingAttachments []domain.Attachment
 }
 
-// Create validates input and stores a new item.
+// Create validates input, stores any uploaded files and saves a new item with
+// its attachments in one database transaction (I-1, I-2, A-1..A-6).
 func (s *ItemService) Create(ctx context.Context, in ItemInput) (domain.Item, error) {
-	title, err := domain.CleanTitle(in.Title, in.Attachments)
+	links, err := buildLinks(in.Links)
+	if err != nil {
+		return domain.Item{}, err
+	}
+	files, err := filePlaceholders(in.Files)
+	if err != nil {
+		return domain.Item{}, err
+	}
+
+	title, err := domain.CleanTitle(in.Title, append(append([]domain.Attachment{}, links...), files...))
 	if err != nil {
 		return domain.Item{}, err
 	}
@@ -74,12 +90,26 @@ func (s *ItemService) Create(ctx context.Context, in ItemInput) (domain.Item, er
 	if err != nil {
 		return domain.Item{}, err
 	}
-	id, err := domain.NewID()
+
+	now := s.now().UTC()
+	for i := range links {
+		links[i].CreatedAt = now
+	}
+	for i := range files {
+		files[i].CreatedAt = now
+	}
+	savedIDs, err := saveFileAttachments(s.blobs, in.Files, files)
 	if err != nil {
+		discardBlobs(s.blobs, savedIDs)
 		return domain.Item{}, err
 	}
 
-	now := s.now().UTC()
+	id, err := domain.NewID()
+	if err != nil {
+		discardBlobs(s.blobs, savedIDs)
+		return domain.Item{}, err
+	}
+	attachments := append(links, files...)
 	item := domain.Item{
 		ID:          id,
 		Title:       title,
@@ -89,15 +119,16 @@ func (s *ItemService) Create(ctx context.Context, in ItemInput) (domain.Item, er
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
-	created, err := s.store.CreateItem(ctx, item, tags)
+	created, err := s.store.CreateItem(ctx, item, tags, attachments)
 	if err != nil {
+		discardBlobs(s.blobs, savedIDs)
 		return domain.Item{}, fmt.Errorf("creating item: %w", err)
 	}
 	return created, nil
 }
 
-// Update validates input and saves an existing active item. Attachments are
-// handled by the attachment service; this call preserves them.
+// Update validates input, appends any new attachments and saves an existing
+// active item. Existing attachments are preserved (I-5, I-6, A-1).
 func (s *ItemService) Update(ctx context.Context, id string, in ItemInput) (domain.Item, error) {
 	existing, err := s.store.GetItem(ctx, id)
 	if err != nil {
@@ -107,11 +138,21 @@ func (s *ItemService) Update(ctx context.Context, id string, in ItemInput) (doma
 		return domain.Item{}, domain.ErrNotFound
 	}
 
-	attachments := in.Attachments
-	if attachments == nil {
-		attachments = existing.Attachments
+	links, err := buildLinks(in.Links)
+	if err != nil {
+		return domain.Item{}, err
 	}
-	title, err := domain.CleanTitle(in.Title, attachments)
+	files, err := filePlaceholders(in.Files)
+	if err != nil {
+		return domain.Item{}, err
+	}
+	// For the default-title rule, existing active attachments come first so
+	// the item keeps its earliest attachment order (I-3).
+	known := existing.Attachments
+	if in.ExistingAttachments != nil {
+		known = in.ExistingAttachments
+	}
+	title, err := domain.CleanTitle(in.Title, append(append(append([]domain.Attachment{}, known...), links...), files...))
 	if err != nil {
 		return domain.Item{}, err
 	}
@@ -128,14 +169,28 @@ func (s *ItemService) Update(ctx context.Context, id string, in ItemInput) (doma
 		return domain.Item{}, err
 	}
 
+	now := s.now().UTC()
+	for i := range links {
+		links[i].CreatedAt = now
+	}
+	for i := range files {
+		files[i].CreatedAt = now
+	}
+	savedIDs, err := saveFileAttachments(s.blobs, in.Files, files)
+	if err != nil {
+		discardBlobs(s.blobs, savedIDs)
+		return domain.Item{}, err
+	}
+
 	existing.Title = title
 	existing.Description = description
 	existing.Note = note
 	existing.Favorite = in.Favorite
-	existing.UpdatedAt = s.now().UTC()
+	existing.UpdatedAt = now
 
-	updated, err := s.store.UpdateItem(ctx, existing, tags)
+	updated, err := s.store.UpdateItem(ctx, existing, tags, append(links, files...))
 	if err != nil {
+		discardBlobs(s.blobs, savedIDs)
 		return domain.Item{}, fmt.Errorf("updating item: %w", err)
 	}
 	return updated, nil

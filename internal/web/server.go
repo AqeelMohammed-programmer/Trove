@@ -114,6 +114,8 @@ func (s *Server) routes() {
 	s.handle("GET", "/items/{id}/edit", "/items/example/edit", false, s.authenticated(s.handleEditItem))
 	s.handle("POST", "/items/{id}", "/items/example", false, s.authenticated(s.handleUpdateItem))
 	s.handle("POST", "/items/{id}/favorite", "/items/example/favorite", false, s.authenticated(s.handleFavorite))
+	s.handle("GET", "/attachments/{id}/download", "/attachments/example/download", false, s.authenticated(s.handleDownload))
+	s.handle("GET", "/form/link-row", "/form/link-row", false, s.authenticated(s.handleLinkRow))
 	s.handle("POST", "/logout", "/logout", false, s.authenticated(s.handleLogout))
 	s.handle("GET", "/change-password", "/change-password", false, s.authenticated(s.handleChangePasswordPage))
 	s.handle("POST", "/change-password", "/change-password", false, s.authenticated(s.handleChangePassword))

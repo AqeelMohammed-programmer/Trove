@@ -51,6 +51,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vendored HTMX 2.0.4 (MIT) for partial updates, configured for the strict
   Content-Security-Policy; every action still works without JavaScript.
 
+### Added
+
+- Attachments (M3): link attachments with `http`/`https` validation (`A-2`),
+  and file uploads streamed to disk while a SHA-256 is computed, stored under
+  the attachment id and never by file name (`A-3`, `A-4`, `A-6`, `A-8`).
+  Several files can be added at once, and kinds mix on one item (`A-1`, `A-5`).
+- Attachment display and actions: links open in a new tab and can be copied;
+  files download under their original name with `Content-Disposition:
+  attachment` and `nosniff` (`A-7`).
+- A streamed multipart add/edit form and the `/attachments/{id}/download`
+  endpoint.
+
 ### Changed
 
 - Specification section 8.1: removed the resolved "Product name" decision and

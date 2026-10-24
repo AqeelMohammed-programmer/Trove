@@ -11,8 +11,9 @@ import (
 	"Trove/internal/domain"
 )
 
-// CreateItem inserts an item and resolves its tags in one transaction.
-func (s *Store) CreateItem(ctx context.Context, item domain.Item, tagNames []string) (domain.Item, error) {
+// CreateItem inserts an item, its attachments and its tags in one transaction
+// (I-1, spec section 6).
+func (s *Store) CreateItem(ctx context.Context, item domain.Item, tagNames []string, attachments []domain.Attachment) (domain.Item, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return domain.Item{}, fmt.Errorf("starting item transaction: %w", err)
@@ -32,15 +33,20 @@ func (s *Store) CreateItem(ctx context.Context, item domain.Item, tagNames []str
 	if err != nil {
 		return domain.Item{}, err
 	}
+	if err := insertAttachments(ctx, tx, item.ID, attachments); err != nil {
+		return domain.Item{}, err
+	}
 	if err := tx.Commit(); err != nil {
 		return domain.Item{}, fmt.Errorf("committing item: %w", err)
 	}
 	item.Tags = tags
+	item.Attachments = attachments
 	return item, nil
 }
 
-// UpdateItem saves the editable fields and replaces the tag set.
-func (s *Store) UpdateItem(ctx context.Context, item domain.Item, tagNames []string) (domain.Item, error) {
+// UpdateItem saves the editable fields, replaces the tag set and appends any
+// new attachments in one transaction (I-5, I-6).
+func (s *Store) UpdateItem(ctx context.Context, item domain.Item, tagNames []string, newAttachments []domain.Attachment) (domain.Item, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return domain.Item{}, fmt.Errorf("starting item transaction: %w", err)
@@ -66,6 +72,9 @@ func (s *Store) UpdateItem(ctx context.Context, item domain.Item, tagNames []str
 
 	tags, err := replaceTags(ctx, tx, item.ID, tagNames, item.UpdatedAt)
 	if err != nil {
+		return domain.Item{}, err
+	}
+	if err := insertAttachments(ctx, tx, item.ID, newAttachments); err != nil {
 		return domain.Item{}, err
 	}
 	if err := tx.Commit(); err != nil {

@@ -2,10 +2,14 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
+	"Trove/internal/blob"
 	"Trove/internal/domain"
 )
 
@@ -24,20 +28,22 @@ func newFakeItemStore() *fakeItemStore {
 	}
 }
 
-func (f *fakeItemStore) CreateItem(_ context.Context, item domain.Item, tagNames []string) (domain.Item, error) {
+func (f *fakeItemStore) CreateItem(_ context.Context, item domain.Item, tagNames []string, attachments []domain.Attachment) (domain.Item, error) {
 	if f.createErr != nil {
 		return domain.Item{}, f.createErr
 	}
 	item.Tags = f.tagsFor(tagNames)
+	item.Attachments = append(item.Attachments, attachments...)
 	f.items[item.ID] = item
 	return item, nil
 }
 
-func (f *fakeItemStore) UpdateItem(_ context.Context, item domain.Item, tagNames []string) (domain.Item, error) {
+func (f *fakeItemStore) UpdateItem(_ context.Context, item domain.Item, tagNames []string, newAttachments []domain.Attachment) (domain.Item, error) {
 	if _, ok := f.items[item.ID]; !ok {
 		return domain.Item{}, domain.ErrNotFound
 	}
 	item.Tags = f.tagsFor(tagNames)
+	item.Attachments = append(item.Attachments, newAttachments...)
 	f.items[item.ID] = item
 	return item, nil
 }
@@ -77,6 +83,25 @@ func (f *fakeItemStore) SuggestTags(context.Context, string, int) ([]string, err
 	return nil, nil
 }
 
+func (f *fakeItemStore) AttachmentByID(_ context.Context, id string) (domain.Attachment, error) {
+	for _, item := range f.items {
+		for _, a := range item.Attachments {
+			if a.ID == id {
+				return a, nil
+			}
+		}
+	}
+	return domain.Attachment{}, domain.ErrNotFound
+}
+
+func (f *fakeItemStore) ItemTrashed(_ context.Context, itemID string) (bool, error) {
+	item, ok := f.items[itemID]
+	if !ok {
+		return false, domain.ErrNotFound
+	}
+	return item.TrashedAt != nil, nil
+}
+
 func (f *fakeItemStore) tagsFor(names []string) []domain.Tag {
 	tags := make([]domain.Tag, 0, len(names))
 	for _, name := range names {
@@ -91,7 +116,7 @@ func (f *fakeItemStore) tagsFor(names []string) []domain.Tag {
 }
 
 func newTestItemService(store ItemStore, now func() time.Time) *ItemService {
-	return NewItemService(store, now)
+	return NewItemService(store, nil, now)
 }
 
 func TestItemService_Create_ValidatesTitle_I2(t *testing.T) {
@@ -103,8 +128,8 @@ func TestItemService_Create_ValidatesTitle_I2(t *testing.T) {
 	}
 
 	created, err := svc.Create(t.Context(), ItemInput{
-		Title:       "",
-		Attachments: []domain.Attachment{{Kind: domain.KindLink, URL: "https://example.org"}},
+		Title: "",
+		Links: []LinkInput{{URL: "https://example.org"}},
 	})
 	if err != nil {
 		t.Fatalf("Create(titled from attachment): %v", err)
@@ -240,5 +265,87 @@ func TestItemService_SetFavorite_WrapsNotFound(t *testing.T) {
 	svc := newTestItemService(newFakeItemStore(), nil)
 	if err := svc.SetFavorite(t.Context(), "missing", true); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("SetFavorite(missing) error = %v, want ErrNotFound", err)
+	}
+}
+
+func TestItemService_Create_StoresFileWithSHA256_A3_A4(t *testing.T) {
+	t.Parallel()
+
+	blobs, err := blob.New(t.TempDir())
+	if err != nil {
+		t.Fatalf("blob.New(): %v", err)
+	}
+	store := newFakeItemStore()
+	svc := NewItemService(store, blobs, nil)
+
+	content := "the exact bytes"
+	created, err := svc.Create(t.Context(), ItemInput{
+		Title: "with a file",
+		Files: []FileInput{{FileName: "notes.txt", MediaType: "text/plain", Content: strings.NewReader(content)}},
+	})
+	if err != nil {
+		t.Fatalf("Create(): %v", err)
+	}
+	if len(created.Attachments) != 1 {
+		t.Fatalf("attachments = %d, want 1", len(created.Attachments))
+	}
+	a := created.Attachments[0]
+	want := sha256.Sum256([]byte(content))
+	if a.SHA256 != hex.EncodeToString(want[:]) {
+		t.Errorf("sha256 = %q, want %q (A-4)", a.SHA256, hex.EncodeToString(want[:]))
+	}
+	if a.SizeBytes != int64(len(content)) {
+		t.Errorf("size = %d, want %d", a.SizeBytes, len(content))
+	}
+	if exists, err := blobs.Exists(a.ID); err != nil || !exists {
+		t.Errorf("content not stored: exists=%v err=%v", exists, err)
+	}
+}
+
+func TestItemService_Create_RollsBackBlobsOnValidationError(t *testing.T) {
+	t.Parallel()
+
+	blobs, err := blob.New(t.TempDir())
+	if err != nil {
+		t.Fatalf("blob.New(): %v", err)
+	}
+	svc := NewItemService(newFakeItemStore(), blobs, nil)
+
+	// A bad link is rejected before any file is written.
+	if _, err := svc.Create(t.Context(), ItemInput{
+		Title: "x",
+		Links: []LinkInput{{URL: "ftp://example.org"}},
+		Files: []FileInput{{FileName: "a.txt", Content: strings.NewReader("x")}},
+	}); err == nil {
+		t.Fatal("Create(bad link) error = nil, want a validation error")
+	}
+	ids, err := blobs.List()
+	if err != nil {
+		t.Fatalf("List(): %v", err)
+	}
+	if len(ids) != 0 {
+		t.Errorf("blob store is not empty after a rejected save: %v", ids)
+	}
+}
+
+func TestItemService_Download_RefusesNonFile(t *testing.T) {
+	t.Parallel()
+
+	blobs, err := blob.New(t.TempDir())
+	if err != nil {
+		t.Fatalf("blob.New(): %v", err)
+	}
+	store := newFakeItemStore()
+	svc := NewItemService(store, blobs, nil)
+
+	created, err := svc.Create(t.Context(), ItemInput{
+		Title: "link only",
+		Links: []LinkInput{{URL: "https://example.org"}},
+	})
+	if err != nil {
+		t.Fatalf("Create(): %v", err)
+	}
+	if _, err := svc.Download(t.Context(), created.Attachments[0].ID); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("Download(link) error = %v, want ErrNotFound", err)
 	}
 }

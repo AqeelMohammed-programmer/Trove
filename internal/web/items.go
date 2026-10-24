@@ -84,6 +84,9 @@ type itemFormView struct {
 	CancelURL   string
 	SubmitLabel string
 	AllTags     []domain.TagCount
+	// Attachments are the item's current active attachments, shown read-only
+	// on the edit form (M5 adds removal).
+	Attachments []domain.Attachment
 }
 
 // itemPageData starts from the common page data and adds what the sidebar
@@ -177,24 +180,25 @@ func (s *Server) handleCreateItem(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	if !s.parseForm(w, r) {
+	in, ok := s.parseItemInput(w, r)
+	if !ok {
 		return
 	}
+	defer in.Close()
 	if !s.checkCSRF(w, r, sess) {
 		return
 	}
 
-	in := itemInputFromForm(r)
-	item, err := s.items.Create(r.Context(), in)
+	item, err := s.items.Create(r.Context(), in.input)
 	if err != nil {
 		s.renderItemFormError(w, r, err, itemFormView{
 			Action:      "/items",
 			Heading:     "Add item",
-			TitleValue:  in.Title,
-			DescValue:   in.Description,
-			NoteValue:   in.Note,
-			TagsValue:   strings.Join(in.Tags, ", "),
-			Favorite:    in.Favorite,
+			TitleValue:  in.input.Title,
+			DescValue:   in.input.Description,
+			NoteValue:   in.input.Note,
+			TagsValue:   strings.Join(in.input.Tags, ", "),
+			Favorite:    in.input.Favorite,
 			CancelURL:   "/",
 			SubmitLabel: "Save item",
 		})
@@ -264,6 +268,7 @@ func (s *Server) handleEditItem(w http.ResponseWriter, r *http.Request) {
 		CancelURL:   "/items/" + item.ID,
 		SubmitLabel: "Save changes",
 		AllTags:     tagsFromData(data),
+		Attachments: item.Attachments,
 	}
 	s.render(w, http.StatusOK, "item-form", data)
 }
@@ -275,16 +280,17 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	if !s.parseForm(w, r) {
+	id := r.PathValue("id")
+	in, ok := s.parseItemInput(w, r)
+	if !ok {
 		return
 	}
+	defer in.Close()
 	if !s.checkCSRF(w, r, sess) {
 		return
 	}
 
-	id := r.PathValue("id")
-	in := itemInputFromForm(r)
-	item, err := s.items.Update(r.Context(), id, in)
+	item, err := s.items.Update(r.Context(), id, in.input)
 	if err != nil {
 		existing, getErr := s.items.Get(r.Context(), id)
 		heading := "Edit item"
@@ -294,11 +300,11 @@ func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
 		s.renderItemFormError(w, r, err, itemFormView{
 			Action:      "/items/" + id,
 			Heading:     heading,
-			TitleValue:  in.Title,
-			DescValue:   in.Description,
-			NoteValue:   in.Note,
-			TagsValue:   strings.Join(in.Tags, ", "),
-			Favorite:    in.Favorite,
+			TitleValue:  in.input.Title,
+			DescValue:   in.input.Description,
+			NoteValue:   in.input.Note,
+			TagsValue:   strings.Join(in.input.Tags, ", "),
+			Favorite:    in.input.Favorite,
 			CancelURL:   "/items/" + id,
 			SubmitLabel: "Save changes",
 		})
@@ -538,17 +544,6 @@ func detailTagChips(tags []domain.Tag) []tagChip {
 		chips = append(chips, tagChip{Name: tag.Name, URL: "/?" + q.Encode()})
 	}
 	return chips
-}
-
-// itemInputFromForm reads the editable fields. Tag input is comma separated.
-func itemInputFromForm(r *http.Request) service.ItemInput {
-	return service.ItemInput{
-		Title:       r.PostFormValue("title"),
-		Description: r.PostFormValue("description"),
-		Note:        r.PostFormValue("note"),
-		Tags:        splitTags(r.PostFormValue("tags")),
-		Favorite:    r.PostFormValue("favorite") == "1",
-	}
 }
 
 // splitTags splits the comma-separated tag field. Empty pieces are dropped;

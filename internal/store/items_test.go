@@ -43,7 +43,7 @@ func TestStore_CreateAndGetItem_I2(t *testing.T) {
 	st := newTestStore(t)
 
 	item := sampleItem("first")
-	created, err := st.CreateItem(ctx, item, []string{"Reading", "rust"})
+	created, err := st.CreateItem(ctx, item, []string{"Reading", "rust"}, nil)
 	if err != nil {
 		t.Fatalf("CreateItem(): %v", err)
 	}
@@ -83,12 +83,12 @@ func TestStore_TagReuseIsCaseInsensitive_T4(t *testing.T) {
 	ctx := context.Background()
 	st := newTestStore(t)
 
-	if _, err := st.CreateItem(ctx, sampleItem("a"), []string{"Reading"}); err != nil {
+	if _, err := st.CreateItem(ctx, sampleItem("a"), []string{"Reading"}, nil); err != nil {
 		t.Fatalf("CreateItem(a): %v", err)
 	}
 	// A second item uses a different capitalization; it must reuse the tag and
 	// keep the first spelling.
-	if _, err := st.CreateItem(ctx, sampleItem("b"), []string{"reading"}); err != nil {
+	if _, err := st.CreateItem(ctx, sampleItem("b"), []string{"reading"}, nil); err != nil {
 		t.Fatalf("CreateItem(b): %v", err)
 	}
 
@@ -114,7 +114,7 @@ func TestStore_UpdateReplacesTags_T5(t *testing.T) {
 	st := newTestStore(t)
 
 	item := sampleItem("a")
-	created, err := st.CreateItem(ctx, item, []string{"one", "two"})
+	created, err := st.CreateItem(ctx, item, []string{"one", "two"}, nil)
 	if err != nil {
 		t.Fatalf("CreateItem(): %v", err)
 	}
@@ -122,7 +122,7 @@ func TestStore_UpdateReplacesTags_T5(t *testing.T) {
 	created.Title = "a renamed"
 	created.Tags = nil
 	created.UpdatedAt = created.UpdatedAt.Add(time.Hour)
-	updated, err := st.UpdateItem(ctx, created, []string{"two", "three"})
+	updated, err := st.UpdateItem(ctx, created, []string{"two", "three"}, nil)
 	if err != nil {
 		t.Fatalf("UpdateItem(): %v", err)
 	}
@@ -156,7 +156,7 @@ func TestStore_ListItems_FiltersAndSort_B1_B2_B3(t *testing.T) {
 	base := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
 	insert := func(id, title string, favorite bool, created time.Time) {
 		item := domain.Item{ID: id, Title: title, Favorite: favorite, CreatedAt: created, UpdatedAt: created}
-		if _, err := st.CreateItem(ctx, item, nil); err != nil {
+		if _, err := st.CreateItem(ctx, item, nil, nil); err != nil {
 			t.Fatalf("CreateItem(%s): %v", id, err)
 		}
 	}
@@ -212,7 +212,7 @@ func TestStore_ListItems_Pagination_B7(t *testing.T) {
 			CreatedAt: base.Add(time.Duration(i) * time.Hour),
 			UpdatedAt: base,
 		}
-		if _, err := st.CreateItem(ctx, item, nil); err != nil {
+		if _, err := st.CreateItem(ctx, item, nil, nil); err != nil {
 			t.Fatalf("CreateItem(): %v", err)
 		}
 	}
@@ -241,10 +241,10 @@ func TestStore_ListItems_TagFilterRequiresAll_B4(t *testing.T) {
 
 	item1 := domain.Item{ID: "a", Title: "A", CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()}
 	item2 := domain.Item{ID: "b", Title: "B", CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()}
-	if _, err := st.CreateItem(ctx, item1, []string{"one", "two"}); err != nil {
+	if _, err := st.CreateItem(ctx, item1, []string{"one", "two"}, nil); err != nil {
 		t.Fatalf("CreateItem(a): %v", err)
 	}
-	if _, err := st.CreateItem(ctx, item2, []string{"one"}); err != nil {
+	if _, err := st.CreateItem(ctx, item2, []string{"one"}, nil); err != nil {
 		t.Fatalf("CreateItem(b): %v", err)
 	}
 
@@ -264,7 +264,7 @@ func TestStore_SetFavorite_DoesNotTouchUpdatedAt_I5(t *testing.T) {
 	st := newTestStore(t)
 
 	item := sampleItem("a")
-	created, err := st.CreateItem(ctx, item, nil)
+	created, err := st.CreateItem(ctx, item, nil, nil)
 	if err != nil {
 		t.Fatalf("CreateItem(): %v", err)
 	}
@@ -290,7 +290,7 @@ func TestStore_SuggestTags_T2(t *testing.T) {
 	ctx := context.Background()
 	st := newTestStore(t)
 
-	if _, err := st.CreateItem(ctx, sampleItem("a"), []string{"reading", "readonly", "rust"}); err != nil {
+	if _, err := st.CreateItem(ctx, sampleItem("a"), []string{"reading", "readonly", "rust"}, nil); err != nil {
 		t.Fatalf("CreateItem(): %v", err)
 	}
 
@@ -319,7 +319,7 @@ func TestStore_ActiveTags_ExcludesTrashedOnlyTags_T6(t *testing.T) {
 	st := newTestStore(t)
 
 	item := sampleItem("a")
-	if _, err := st.CreateItem(ctx, item, []string{"only-here"}); err != nil {
+	if _, err := st.CreateItem(ctx, item, []string{"only-here"}, nil); err != nil {
 		t.Fatalf("CreateItem(): %v", err)
 	}
 
@@ -346,10 +346,10 @@ func TestStore_DeleteTagWhenUnused(t *testing.T) {
 	st := newTestStore(t)
 
 	item := sampleItem("a")
-	if _, err := st.CreateItem(ctx, item, []string{"temp"}); err != nil {
+	if _, err := st.CreateItem(ctx, item, []string{"temp"}, nil); err != nil {
 		t.Fatalf("CreateItem(): %v", err)
 	}
-	if _, err := st.UpdateItem(ctx, item, nil); err != nil {
+	if _, err := st.UpdateItem(ctx, item, nil, nil); err != nil {
 		t.Fatalf("UpdateItem(): %v", err)
 	}
 

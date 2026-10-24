@@ -62,7 +62,7 @@ rule it covers has a test and its pages are updated.
 | M0 | Skeleton: repo, make targets, config, migrations, health, FTS5 proof, ADRs, docs | done |
 | M1 | Authentication | done |
 | M2 | Items and tags | done |
-| M3 | Attachments | not started |
+| M3 | Attachments | done |
 | M4 | Search | not started |
 | M5 | Trash | not started |
 | M6 | Duplicates | not started |

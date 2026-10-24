@@ -35,14 +35,14 @@ rules is still a gap.
 
 | Rule | Test(s) | Status |
 |---|---|---|
-| A-1 | — | gap (M3) |
-| A-2 | `TestCleanLinkURL_A2` | covered (validation; UI lands in M3) |
-| A-3 | — | gap (M3) |
-| A-4 | — | gap (M3) |
-| A-5 | — | gap (M3) |
-| A-6 | — | gap (M3) |
-| A-7 | — | gap (M3) |
-| A-8 | — | gap (M3) |
+| A-1 | `TestStore_CreateItemWithAttachments_A1_A3_R2`, `TestCreateItemWithAttachments_A1_A3_A4_A5_A6` | covered |
+| A-2 | `TestCleanLinkURL_A2`, `TestCreateItem_RejectsBadScheme_A2` | covered |
+| A-3 | `TestStore_CreateItemWithAttachments_A1_A3_R2`, `TestItemService_Create_StoresFileWithSHA256_A3_A4`, `TestSave_StoresByIDNotName_A3` | covered |
+| A-4 | `TestItemService_Create_StoresFileWithSHA256_A3_A4`, `TestSave_ComputesSHA256AndSize_A4` | covered |
+| A-5 | `TestCreateItemWithAttachments_A1_A3_A4_A5_A6` | covered |
+| A-6 | `TestCreateItemWithAttachments_A1_A3_A4_A5_A6` | covered |
+| A-7 | `TestDownloadAttachment_A7_A9`, `TestStore_AttachmentByID_A7` | covered |
+| A-8 | `TestSave_RejectsPathTraversalName`, `TestCreateItemWithAttachments_A1_A3_A4_A5_A6` (files are stored by id, never by name) | covered |
 | A-9 | — | gap (M5) |
 
 ## Tags and favorites (`T-*`, `F-*`)
@@ -67,7 +67,7 @@ rules is still a gap.
 | B-2 | `TestStore_ListItems_FiltersAndSort_B1_B2_B3` | covered |
 | B-3 | `TestItemList_FiltersAndCount_B7` | covered |
 | B-4 | `TestStore_ListItems_TagFilterRequiresAll_B4` | covered |
-| B-5 | — | gap (M3, needs attachment UI) |
+| B-5 | `TestStore_ListItems_AttachmentKindFilters_B5` | covered |
 | B-6 | `TestStore_ActiveTags_ExcludesTrashedOnlyTags_T6`, `TestStore_ListItems_FiltersAndSort_B1_B2_B3` | covered |
 | B-7 | `TestItemList_FiltersAndCount_B7`, `TestStore_ListItems_Pagination_B7`, `TestItemService_List_DefaultsAndClampsPageSize_B7` | covered |
 
@@ -184,6 +184,7 @@ These tests protect the foundations the spec rules depend on.
 | File safety | `TestOpen_CreatesPrivateFile`, `TestOpen_PathWithSpaces` | The database file is `0600`; unusual paths work. |
 | Migrations | `TestMigrator_AppliesInOrderAndIsIdempotent`, `TestMigrator_RollsBackFailedMigration`, `TestMigrator_RejectsMalformedNames` | Ordered, transactional, idempotent, strict naming. |
 | FTS5 | `TestFTS5_AvailableAndUsable` | The driver supports FTS5, prefix matching, case folding and bm25 ranking (see ADR 0002). |
+| Attachments | `TestCreateItemWithAttachments_A1_A3_A4_A5_A6`, `TestDownloadAttachment_A7_A9`, `TestSave_*`, `TestItemService_Create_StoresFileWithSHA256_A3_A4` | Links and files are added through one form; files stream to disk with SHA-256, are stored by attachment id, and download under the original name with safe headers. |
 | Items and tags | `TestStore_CreateAndGetItem_I2`, `TestStore_ListItems_*`, `TestItemService_*`, `TestCreateItemFlow_*`, `TestEditItemFlow_I6`, `TestFavoriteToggle_F1` | Item create/edit/list, tag resolution, filtering, sorting and pagination work against a real SQLite database and over HTTP. |
 | Markdown safety | `TestMarkdown_*`, `TestItemDetail_RawHTMLNeverRendered_V2` | Notes render standard Markdown while raw HTML, event handlers and `javascript:` URLs are removed (V-1..V-4). |
 | Authentication | `TestSetupFlow_*`, `TestLoginFlow_*`, `TestLoginThrottle_U9`, `TestChangePassword_U7`, `TestLogout_U6` | First-run setup, sessions, cookie attributes, throttling, password change and logout work end to end against a real database. |

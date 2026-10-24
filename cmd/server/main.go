@@ -19,6 +19,7 @@ import (
 
 	"Trove/internal/app"
 	"Trove/internal/auth"
+	"Trove/internal/blob"
 	"Trove/internal/config"
 	"Trove/internal/service"
 	"Trove/internal/store"
@@ -71,12 +72,17 @@ func run(args []string, getenv func(string) string) error {
 		}
 	}()
 
+	blobs, err := blob.New(filepath.Join(cfg.DataDir, "files"))
+	if err != nil {
+		return err
+	}
+
 	srv := &http.Server{
 		Addr: cfg.ListenAddr,
 		Handler: web.New(web.Options{
 			Logger:       logger,
 			Auth:         newAuthService(st),
-			Items:        service.NewItemService(st, time.Now),
+			Items:        service.NewItemService(st, blobs, time.Now),
 			SecureCookie: cfg.SecureCookie,
 		}).Handler(),
 		// Uploads stream with no size cap (spec N-1), so there is deliberately

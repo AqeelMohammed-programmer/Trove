@@ -35,9 +35,11 @@
         {{if eq .Kind "link"}}
         <a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{if .Label}}{{.Label}}{{else}}{{.URL}}{{end}}</a>
         <span class="attachment-url">{{.URL}}</span>
+        <button type="button" class="secondary copy" data-copy="{{.URL}}">Copy URL</button>
         {{else}}
         <span class="attachment-name">{{if .Label}}{{.Label}}{{else}}{{.FileName}}{{end}}</span>
         <span class="attachment-size">{{.SizeBytes}} bytes</span>
+        <a class="secondary as-button" href="/attachments/{{.ID}}/download">Download</a>
         {{end}}
       </li>
       {{end}}

@@ -54,7 +54,7 @@ Dependency rules (`AGENTS.md` section 4.2):
 | `internal/web` | HTTP routes, middleware, templates, security headers. | Auth screens and `/healthz`; item UI arrives in M2. |
 | `internal/domain` | Entities, validation and pure rules. | Implemented (items, tags, attachments, query types). |
 | `internal/service` | Use cases implementing spec rules. | Item and tag use cases implemented. |
-| `internal/blob` | Streaming, hashing and atomic storage of copied files. | Not created yet (M3). |
+| `internal/blob` | Streaming, hashing and atomic storage of copied files. | Implemented. |
 | `internal/auth` | Argon2id, sessions, login throttling. | Implemented. |
 | `internal/exchange` | ZIP export and restore-only import. | Not created yet (M8). |
 

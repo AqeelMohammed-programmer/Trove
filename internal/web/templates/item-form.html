@@ -1,7 +1,7 @@
 {{define "content"}}
 <h1>{{.Form.Heading}}</h1>
 
-<form method="post" action="{{.Form.Action}}" class="form item-form">
+<form method="post" action="{{.Form.Action}}" class="form item-form" enctype="multipart/form-data">
   <input type="hidden" name="csrf" value="{{.CSRF}}">
 
   <div class="field">
@@ -35,6 +35,45 @@
   <div class="field">
     <label class="check"><input type="checkbox" name="favorite" value="1" {{if .Form.Favorite}}checked{{end}}> Favorite</label>
   </div>
+
+  <fieldset class="attachments-field">
+    <legend>Attachments</legend>
+
+    {{if .Form.Attachments}}
+    <p class="hint">Current attachments:</p>
+    <ul class="attachment-list">
+      {{range .Form.Attachments}}
+      <li>
+        <span class="kind">{{if eq .Kind "link"}}Link{{else}}File{{end}}</span>
+        {{if eq .Kind "link"}}
+        <a href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{if .Label}}{{.Label}}{{else}}{{.URL}}{{end}}</a>
+        {{else}}
+        <span class="attachment-name">{{if .Label}}{{.Label}}{{else}}{{.FileName}}{{end}}</span>
+        {{end}}
+      </li>
+      {{end}}
+    </ul>
+    {{end}}
+
+    <p class="hint">Links</p>
+    <div id="link-rows">
+      {{template "link-row" .}}
+    </div>
+    <button type="button" class="secondary"
+            hx-get="/form/link-row" hx-target="#link-rows" hx-swap="beforeend">
+      Add another link
+    </button>
+
+    <p class="hint">Files</p>
+    <div class="field">
+      <label for="files">Choose files</label>
+      <input id="files" name="files" type="file" multiple>
+    </div>
+    <div class="field">
+      <label for="file_label">Label for the files (optional)</label>
+      <input id="file_label" name="file_label" type="text" maxlength="100" placeholder="source">
+    </div>
+  </fieldset>
 
   <div class="form-actions">
     <button type="submit" class="primary">{{.Form.SubmitLabel}}</button>

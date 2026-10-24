@@ -660,3 +660,42 @@ textarea {
     text-align: left;
   }
 }
+
+/* --- Attachments (M3) --------------------------------------------------- */
+
+.attachments-field {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.attachments-field legend {
+  font-weight: 600;
+  padding: 0 0.4rem;
+}
+
+.link-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.attachment-name {
+  font-weight: 600;
+}
+
+.attachment-list .copy {
+  margin-left: auto;
+}
+
+@media (max-width: 40rem) {
+  .link-row {
+    grid-template-columns: 1fr;
+  }
+}
